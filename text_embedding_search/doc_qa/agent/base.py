@@ -10,25 +10,28 @@ from langchain.schema import BaseLanguageModel
 from langchain.tools.base import BaseTool
 from pydantic import Field
 
-from doc_qa.agent.output_parser import ConvoOutputParser
-from doc_qa.agent.prompt import FORMAT_INSTRUCTIONS, PREFIX, SUFFIX
-
-AI_PREFIX: str = "AI"
-HUMAN_PREFIX: str = "Human"
+from doc_qa.agent.output_parser import DocQAOutputParser
+from doc_qa.agent.prompt import (
+    AI_PREFIX,
+    FORMAT_INSTRUCTIONS,
+    HUMAN_PREFIX,
+    PREFIX,
+    SUFFIX,
+)
 
 
 class DocQAChatAgent(Agent):
-    """An agent designed to hold a conversation and answer questions about a document
-    (by querying text embeddings from that document).
+    """An agent designed to hold a conversation and answer questions about a
+    document (by querying text embeddings from that document).
     """
 
-    output_parser: AgentOutputParser = Field(default_factory=ConvoOutputParser)
+    output_parser: AgentOutputParser = Field(default_factory=DocQAOutputParser)
 
     @classmethod
     def _get_default_output_parser(
         cls, ai_prefix: str = AI_PREFIX, **kwargs: Any
     ) -> AgentOutputParser:
-        return ConvoOutputParser(ai_prefix=ai_prefix)
+        return DocQAOutputParser(ai_prefix=ai_prefix)
 
     @property
     def _agent_type(self) -> str:
@@ -56,19 +59,30 @@ class DocQAChatAgent(Agent):
         human_prefix: str = HUMAN_PREFIX,
         input_variables: Optional[List[str]] = None,
     ) -> PromptTemplate:
-        """Create prompt in the style of the zero shot agent.
+        """Create a PromptTemplate that will be used to generate prompts for the
+        LLM chain.
 
         Args:
-            tools: List of tools the agent will have access to, used to format the
-                prompt.
-            prefix: String to put before the list of tools.
-            suffix: String to put after the list of tools.
-            ai_prefix: String to use before AI output.
-            human_prefix: String to use before human output.
-            input_variables: List of input variables the final prompt will expect.
+            tools (Sequence[BaseTool]): List of tools that the agent has access
+                to.
+            prefix (str, optional): String to put before the list of tools.
+                Defaults to PREFIX.
+            suffix (str, optional): String to put after the list of tools.
+                Defaults to SUFFIX.
+            format_instructions (str, optional): Instructions describing to the
+                LLM what format it should respond with. Defaults to
+                FORMAT_INSTRUCTIONS.
+            ai_prefix (str, optional): String used before all AI output in the
+                chat history. Defaults to AI_PREFIX.
+            human_prefix (str, optional): String used before all human output.
+                Defaults to HUMAN_PREFIX.
+            input_variables (Optional[List[str]], optional): The list of input
+                variables that the prompt template will expect. Defaults to
+                None.
 
         Returns:
-            A PromptTemplate with the template assembled from the pieces here.
+            PromptTemplate: A prompt template assembled from the input
+                parameters to this function.
         """
         tool_strings = "\n".join(
             [f"> {tool.name}: {tool.description}" for tool in tools]
@@ -92,8 +106,8 @@ class DocQAChatAgent(Agent):
         prefix: str = PREFIX,
         suffix: str = SUFFIX,
         format_instructions: str = FORMAT_INSTRUCTIONS,
-        ai_prefix: str = "AI",
-        human_prefix: str = "Human",
+        ai_prefix: str = AI_PREFIX,
+        human_prefix: str = HUMAN_PREFIX,
         input_variables: Optional[List[str]] = None,
         **kwargs: Any,
     ) -> Agent:

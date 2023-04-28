@@ -4,11 +4,11 @@ from typing import Union
 from langchain.agents.agent import AgentOutputParser
 from langchain.schema import AgentAction, AgentFinish, OutputParserException
 
-from doc_qa.agent.prompt import FORMAT_INSTRUCTIONS
+from doc_qa.agent.prompt import AI_PREFIX, FORMAT_INSTRUCTIONS
 
 
-class ConvoOutputParser(AgentOutputParser):
-    ai_prefix: str = "AI"
+class DocQAOutputParser(AgentOutputParser):
+    ai_prefix: str = AI_PREFIX
 
     def get_format_instructions(self) -> str:
         return FORMAT_INSTRUCTIONS
