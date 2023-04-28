@@ -29,6 +29,10 @@ def generate_pdf_embeddings(
     embedding_dir = Path(embedding_dir)
     embedding_path = embedding_dir / pdf_path.stem
 
+    # TODO: Get rid of the VectorstoreIndexCreator and VectorStoreIndexWrapper,
+    # and just interact directly with Chroma. These higher-level APIs just seem
+    # to make things messier and we have to unwrap them later anyways.
+
     # Generate embeddings if they have not already been generated and cached for this
     # PDF file.
     if not embedding_path.exists():
