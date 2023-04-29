@@ -88,6 +88,7 @@ class DocQAChatAgent(Agent):
             [f"> {tool.name}: {tool.description}" for tool in tools]
         )
         tool_names = ", ".join([tool.name for tool in tools])
+        prefix = prefix.format(human_prefix=human_prefix)
         format_instructions = format_instructions.format(
             tool_names=tool_names, ai_prefix=ai_prefix, human_prefix=human_prefix
         )

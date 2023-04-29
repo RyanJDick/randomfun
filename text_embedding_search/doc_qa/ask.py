@@ -31,8 +31,7 @@ def main():
         Tool(
             name="DOC_RETRIEVER",
             func=doc_retrieval.run,
-            description="useful for retrieving information from the document of"
-            " interest. Input should be a fully-formed question.",
+            description="DOC_RETRIEVER returns blocks of text from a document that are relevant to the input query. The input should be a statement describing the content that you want to retrieve from the document",
         ),
     ]
 
