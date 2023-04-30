@@ -6,9 +6,26 @@ from langchain.chains import RetrievalQA
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
+from langchain.vectorstores.base import VectorStore
 
 from doc_qa.agent import DocQAChatAgent
 from doc_qa.embed import generate_pdf_embeddings
+
+
+def build_retrieve_fn(vectorstore: VectorStore, num_docs=4):
+    def retrieve_fn(query):
+        results = vectorstore.similarity_search(query, k=num_docs)
+
+        s = ""
+        for i, res in enumerate(results):
+            s += f"Block {i} content:\n"
+            s += "---\n"
+            s += res.page_content
+            s += "\n---\n\n"
+
+        return s
+
+    return retrieve_fn
 
 
 def main():
@@ -30,8 +47,8 @@ def main():
     tools = [
         Tool(
             name="DOC_RETRIEVER",
-            func=doc_retrieval.run,
-            description="DOC_RETRIEVER returns blocks of text from a document that are relevant to the input query. The input should be a statement describing the content that you want to retrieve from the document",
+            func=build_retrieve_fn(index.vectorstore),  # doc_retrieval.run,
+            description="DOC_RETRIEVER returns blocks of text from a document that are relevant to the input query. The input should be a statement describing the content that you want to retrieve from the document.",
         ),
     ]
 
