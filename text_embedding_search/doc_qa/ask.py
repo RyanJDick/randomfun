@@ -31,7 +31,7 @@ def main():
     parser.add_argument("pdf_file", help="Path to PDF file to ask questions about.")
     args = parser.parse_args()
 
-    # embedding_llm = OpenAIEmbeddings()
+    # TODO: Experiment with using a chat-optimized model instead (e.g. GPT-3 or GPT-4).
     llm = OpenAI(temperature=0)
 
     vector_store = generate_pdf_embeddings(args.pdf_file)
