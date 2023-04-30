@@ -1,9 +1,7 @@
 import argparse
 
-from langchain.agents import Tool, initialize_agent
+from langchain.agents import Tool
 from langchain.agents.agent import AgentExecutor
-from langchain.chains import RetrievalQA
-from langchain.embeddings import OpenAIEmbeddings
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.vectorstores.base import VectorStore
@@ -36,18 +34,12 @@ def main():
     # embedding_llm = OpenAIEmbeddings()
     llm = OpenAI(temperature=0)
 
-    index = generate_pdf_embeddings(args.pdf_file)
-
-    doc_retrieval = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=index.vectorstore.as_retriever(),
-    )
+    vector_store = generate_pdf_embeddings(args.pdf_file)
 
     tools = [
         Tool(
             name="DOC_RETRIEVER",
-            func=build_retrieve_fn(index.vectorstore),  # doc_retrieval.run,
+            func=build_retrieve_fn(vector_store),
             description="DOC_RETRIEVER returns blocks of text from a document that are relevant to the input query. The input should be a statement describing the content that you want to retrieve from the document.",
         ),
     ]
@@ -69,16 +61,7 @@ def main():
     while True:
         print("**********************************\n\n")
         query = input("Enter a query: ")
-
-        result = agent_executor.run(query)
-        # result = agent_executor({"chat_history": chat_history, "input": query})
-        # result = index.query_with_sources(query)
-
-        # print(result)
-
-        # import json
-
-        # print(json.dumps(result, indent=2))
+        agent_executor.run(query)
 
 
 if __name__ == "__main__":

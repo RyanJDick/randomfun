@@ -2,15 +2,15 @@ from pathlib import Path
 
 from langchain.document_loaders import PyPDFLoader
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.indexes import VectorstoreIndexCreator
-from langchain.indexes.vectorstore import VectorStoreIndexWrapper
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores.base import VectorStore
 from langchain.vectorstores.chroma import Chroma
 
 
 def generate_pdf_embeddings(
     pdf_path: str, embedding_dir: str = "output/embeddings/"
-) -> VectorStoreIndexWrapper:
-    """Generate text embeddings for PDF document.
+) -> VectorStore:
+    """Generate text embeddings for a PDF document.
 
     Embeddings are persisted under the PDF file name. If embeddings already exist for
     the provided PDF name, they are loaded rather than re-generated.
@@ -21,28 +21,27 @@ def generate_pdf_embeddings(
             persisted. Defaults to "output/embeddings/".
 
     Returns:
-        VectorStoreIndexWrapper: A vector store containing the document embeddings.
+        VectorStore: A vector store containing the document embeddings.
     """
-    loader = PyPDFLoader(pdf_path)
 
     pdf_path = Path(pdf_path)
     embedding_dir = Path(embedding_dir)
     embedding_path = embedding_dir / pdf_path.stem
 
-    # TODO: Get rid of the VectorstoreIndexCreator and VectorStoreIndexWrapper,
-    # and just interact directly with Chroma. These higher-level APIs just seem
-    # to make things messier and we have to unwrap them later anyways.
-
     # Generate embeddings if they have not already been generated and cached for this
     # PDF file.
     if not embedding_path.exists():
-        index = VectorstoreIndexCreator(
-            embedding=OpenAIEmbeddings(),
-            vectorstore_cls=Chroma,
-            vectorstore_kwargs={"persist_directory": str(embedding_path)},
-        ).from_loaders([loader])
+        loader = PyPDFLoader(pdf_path)
+        docs = loader.load()
 
-        index.vectorstore.persist()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        sub_docs = text_splitter.split_documents(docs)
+
+        vector_store = Chroma.from_documents(
+            sub_docs, OpenAIEmbeddings(), persist_directory=str(embedding_path)
+        )
+
+        vector_store.persist()
         print(f"Persisted document embedding to '{embedding_path}'.")
     else:
         print(
@@ -51,11 +50,7 @@ def generate_pdf_embeddings(
         )
 
     # Load persisted embeddings for the PDF file.
-    # Note: The langchain API is a little weird here. Index construction looks very
-    #       different when you want to load from a persistent store.
-    return VectorStoreIndexWrapper(
-        vectorstore=Chroma(
-            embedding_function=OpenAIEmbeddings(),
-            persist_directory=str(embedding_path),
-        )
+    return Chroma(
+        embedding_function=OpenAIEmbeddings(),
+        persist_directory=str(embedding_path),
     )
