@@ -1,7 +1,7 @@
 The following is a sample interaction with the doc_qa agent about the [SAM paper](https://arxiv.org/pdf/2304.02643.pdf). Note that the response to the question about the paper authors is incorrect.
 
 ```bash
-(text_embedding_search_3.8.6) ryan@Ryans-MacBook-Pro text_embedding_search % python doc_qa/ask.py test_docs/2304.02643.pdf
+ryan@Ryans-MacBook-Pro doc_qa % python doc_qa/ask.py test_docs/2304.02643.pdf
 Found existing document embeddings at 'output/embeddings/2304.02643'. Not re-generating.
 Using embedded DuckDB with persistence: data will be stored in: output/embeddings/2304.02643
 **********************************
