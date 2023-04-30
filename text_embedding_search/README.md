@@ -1,6 +1,6 @@
-# Text Embedding Search
+# Document QA
 
-Experiments related to natural language search powered by LLM text embeddings. `doc_qa` is a tool for question answering about PDF documents.
+A simple / minimal `doc_qa` tool for question answering about PDF documents.
 
 ## Setup
 
