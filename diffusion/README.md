@@ -9,6 +9,11 @@ Miscellaneous experiments with diffusion models.
 
 ## Getting Started
 
+### Notebooks:
+
+- 00_getting_started.ipynb: Stable diffusion text to image demo.
+- 01_paint_by_example.ipynb: PaintByExample demo.
+
 ### Training DreamBooth
 
 DreamBooth training was done according to the instructions [here](https://huggingface.co/docs/diffusers/training/dreambooth).
