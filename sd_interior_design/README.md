@@ -2,6 +2,12 @@
 
 This directory contains the results of an attempt to fine-tune a stable diffusion model on interior design images.
 
+## Install Dependencies
+
+1. Tested with `python 3.8.6`.
+2. (Recommended) Set up python virtual environment.
+3. `pip install -r requirements.txt`
+
 ## Training Locally
 
 1. Download an image dataset using [this tool](../unsplash_scraper/):
@@ -12,14 +18,26 @@ python scrape_unsplash.py "living room" --out-dir out --max-images 5000
 ```bash
 python prepare_dataset.py --input-dir ~/src/randomfun/unsplash_scraper/out --output-dir ~/src/randomfun/sd_interior_design/living_room_dataset_v1
 ```
-3. Zip the dataset directory and upload it to S3 (assuming that we will be running training in the cloud):
+3. Configure HuggingFace accelerate:
 ```bash
-zip -r living_room_dataset_v1.zip living_room_dataset_v1
+# (Tested with default configuration only.)
+accelerate config
 ```
+4. Run training:
+```bash
+./train.sh
+```
+3. 
 
 ## Training on Google Colab
 
-1. TODO
+1. Follow step 1 and 2 from "Training Locally" to generate a dataset.
+2. Zip the dataset directory:
+```bash
+zip -r living_room_dataset_v1.zip living_room_dataset_v1
+```
+3. Upload the zip file to your preferred cloud storage provider (e.g. AWS S3).
+4. TODO: Add notebook and link to launch it.
 
 ## TODO
 
