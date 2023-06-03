@@ -2,7 +2,7 @@
 
 This directory contains the results of an attempt to fine-tune a stable diffusion model on interior design images.
 
-## Steps
+## Training Locally
 
 1. Download an image dataset using [this tool](../unsplash_scraper/):
 ```bash
@@ -17,9 +17,12 @@ python prepare_dataset.py --input-dir ~/src/randomfun/unsplash_scraper/out --out
 zip -r living_room_dataset_v1.zip living_room_dataset_v1
 ```
 
+## Training on Google Colab
+
+1. TODO
+
 ## TODO
 
-- Port dataset creation changes to script.
 - Add notebook for running inference on trained checkpoint.
 - Try to get training to run on an 8GB GPU?
 - Create a script for running locally as well as in Google Colab.
