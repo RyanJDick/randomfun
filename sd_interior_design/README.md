@@ -16,3 +16,16 @@ python prepare_dataset.py --input-dir ~/src/randomfun/unsplash_scraper/out --out
 ```bash
 zip -r living_room_dataset_v1.zip living_room_dataset_v1
 ```
+
+## TODO
+
+- Port dataset creation changes to script.
+- Add notebook for running inference on trained checkpoint.
+- Try to get training to run on an 8GB GPU?
+- Create a script for running locally as well as in Google Colab.
+- Any speedup from xformers?
+- Experiments
+	- Show results at various checkpoints throughout the training process.
+	- Effect of dataset size on behaviour.
+	- Importance of captions: alt descriptions vs. BLIP-generated captions vs. fixed caption
+	- Show effect of different LoRA weightings
