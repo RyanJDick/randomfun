@@ -27,7 +27,10 @@ accelerate config
 ```bash
 ./train.sh
 ```
-3. 
+5. Monitor training with tensorboard:
+```bash
+tensorboard --logdir finetune/lora/living_room/
+```
 
 ## Training on Google Colab
 
@@ -41,9 +44,10 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 
 ## TODO
 
+- Use the installed train_text_to_image_lora.py rather than the one comitted here.
+- Figure out tensorboard usage.
 - Add notebook for running inference on trained checkpoint.
 - Try to get training to run on an 8GB GPU?
-- Create a script for running locally as well as in Google Colab.
 - Any speedup from xformers?
 - Experiments
 	- Show results at various checkpoints throughout the training process.
