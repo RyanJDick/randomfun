@@ -42,13 +42,12 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 3. Upload the zip file to your preferred cloud storage provider (e.g. AWS S3).
 4. TODO: Add notebook and link to launch it.
 
+## Inference
+
+1. Use the `test.ipynb` notebook to test model inference.
+
 ## TODO
 
-- Use the installed train_text_to_image_lora.py rather than the one comitted here.
-- Figure out tensorboard usage.
-- Add notebook for running inference on trained checkpoint.
-- Try to get training to run on an 8GB GPU?
-- Any speedup from xformers?
 - Experiments
 	- Show results at various checkpoints throughout the training process.
 	- Effect of dataset size on behaviour.
