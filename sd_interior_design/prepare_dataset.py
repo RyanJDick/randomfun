@@ -33,16 +33,20 @@ def main():
         shutil.copyfile(src_path, dst_path)
 
         # Populate metadata with image descriptions.
-        metadata.append([image_info["file_name"], image_info["alt_description"]])
+        metadata.append(
+            {
+                "file_name": os.path.relpath(dst_path, args.output_dir),
+                "text": image_info["alt_description"],
+            }
+        )
 
         if i % 100 == 0:
             print(f"{i+1} / {len(manifest)}")
 
-    # Save metadata to .csv file.
-    with open(os.path.join(args.output_dir, "metadata.csv"), "w") as f:
-        f.write("file_name, text\n")
+    # Save metadata to .jsonl file.
+    with open(os.path.join(args.output_dir, "metadata.jsonl"), "w") as f:
         for image_meta in metadata:
-            f.write(f"{image_meta[0]}, {image_meta[1]}\n")
+            f.write(json.dumps(image_meta) + "\n")
 
     print(f"Prepared dataset at '{args.output_dir}'")
 
