@@ -3,7 +3,7 @@ set -euxo pipefail
 
 MODEL_NAME=runwayml/stable-diffusion-v1-5
 OUTPUT_DIR=finetune/lora/living_room/$(date "+%Y%m%d-%H%M%S")
-DATASET_NAME=living_room_dataset_v1
+DATASET_NAME=living_room_dataset_v2
 
 accelerate launch --mixed_precision="fp16" train_text_to_image_lora.py \
   --pretrained_model_name_or_path=$MODEL_NAME \
@@ -21,5 +21,5 @@ accelerate launch --mixed_precision="fp16" train_text_to_image_lora.py \
   --checkpointing_steps=500 \
   --validation_prompt="A modern living room with a white couch." \
   --seed=1337 \
-  --lora_matrix_rank=64 \
+  --lora_matrix_rank=4 \
   --enable_xformers_memory_efficient_attention

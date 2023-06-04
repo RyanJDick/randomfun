@@ -16,7 +16,7 @@ python scrape_unsplash.py "living room" --out-dir out --max-images 5000
 ```
 2. Convert the dataset to HuggingFace format:
 ```bash
-python prepare_dataset.py --input-dir ~/src/randomfun/unsplash_scraper/out --output-dir ~/src/randomfun/sd_interior_design/living_room_dataset_v1
+python prepare_dataset.py --input-dir ~/src/randomfun/unsplash_scraper/out --output-dir ~/src/randomfun/sd_interior_design/living_room_dataset_v2 --caption-prefix="interior design, living room, "
 ```
 3. Configure HuggingFace accelerate:
 ```bash
@@ -49,18 +49,32 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 ## Experiment Log
 
 ### (2023-06-03) text-to-image LoRA
-- 5000 images
-- Descriptions from unsplash alt descriptions
-- Trained for 15k steps
-- Tested at various checkpoints and various LoRA scales. Results were different, but not clearly better (or worse) than the baseline model.
+- Setup:
+  - 5000 images
+  - Descriptions from unsplash alt descriptions
+  - Trained for 15k steps
+- Result:
+  - Tested at various checkpoints and various LoRA scales. Results were different, but not clearly better (or worse) than the baseline model.
 
 ### (2023-06-04) text-to-image LoRA, increase rank 4 -> 64
-- Mostly same configuration as previous experiment.
-- Increased LoRA update matrix rank from 4 to 64.
-- Ran with xformers for more efficient memory usage.
+- Setup:
+  - Mostly same configuration as previous experiment.
+  - Increased LoRA update matrix rank from 4 to 64.
+  - Ran with xformers for more efficient memory usage.
+- Result:
+  - Training was slightly faster with xformers.
+  - Tested at various checkpoints and various LoRA scales. Results were different, but not clearly better (or worse) than the baseline model. So, rank was not the bottleneck holding back performance. I may re-visit the effet of rank once I have a higher-performing model.
+
+### (2023-06-04) text-to-image LoRA, use keywords
+- Setup:
+  - Mostly the same as the previous experiment.
+  - Reverted LoRA rank to 4.
+  - Add the keyword "interior design" in every caption.
+
 
 ## TODO
 - Larger batch size?
+	- Suggestion for cloneofsimo/lora is 4: 
 - Train LoRA with larger rank value
 - Try to fine-tune a text-to-image model without LoRA.
 - Try to train a DreamBooth model to give a name to the interior design style

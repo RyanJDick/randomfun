@@ -11,6 +11,7 @@ def main():
     )
     parser.add_argument("--input-dir", type=str, required=True)
     parser.add_argument("--output-dir", type=str, required=True)
+    parser.add_argument("--caption-prefix", type=str, default="")
     args = parser.parse_args()
 
     # Load manifest file.
@@ -36,7 +37,7 @@ def main():
         metadata.append(
             {
                 "file_name": os.path.relpath(dst_path, args.output_dir),
-                "text": image_info["alt_description"],
+                "text": args.caption_prefix + image_info["alt_description"],
             }
         )
 
