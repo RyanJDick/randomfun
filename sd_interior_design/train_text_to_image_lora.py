@@ -391,6 +391,12 @@ def parse_args():
     parser.add_argument(
         "--noise_offset", type=float, default=0, help="The scale of noise offset."
     )
+    parser.add_argument(
+        "--lora_matrix_rank",
+        type=int,
+        default=4,
+        help=("The dimension of the LoRA update matrices."),
+    )
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -532,7 +538,9 @@ def main():
             hidden_size = unet.config.block_out_channels[block_id]
 
         lora_attn_procs[name] = LoRAAttnProcessor(
-            hidden_size=hidden_size, cross_attention_dim=cross_attention_dim
+            hidden_size=hidden_size,
+            cross_attention_dim=cross_attention_dim,
+            rank=args.lora_matrix_rank,
         )
 
     unet.set_attn_processor(lora_attn_procs)

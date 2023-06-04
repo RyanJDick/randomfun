@@ -46,10 +46,31 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 
 1. Use the `test.ipynb` notebook to test model inference.
 
+## Experiment Log
+
+### (2023-06-03) text-to-image LoRA
+- 5000 images
+- Descriptions from unsplash alt descriptions
+- Trained for 15k steps
+- Tested a couple of 
+
+### (2023-06-04) text-to-image LoRA, increase rank 4 -> 64
+- Same configuration as previous experiment, but increased LoRA update matrix rank from 4 to 64.
+
 ## TODO
 
+- Train LoRA with larger rank value
+- Try to fine-tune a text-to-image model without LoRA.
+- Try to train a DreamBooth model to give a name to the interior design style
+- Add "interior design" to all prompts?
+- Generate captions with BLIP
+- Try to train an inpaint model instead?
+- Look into training with multiple image resolutions
 - Experiments
 	- Show results at various checkpoints throughout the training process.
 	- Effect of dataset size on behaviour.
 	- Importance of captions: alt descriptions vs. BLIP-generated captions vs. fixed caption
 	- Show effect of different LoRA weightings
+- Training notes:
+	- Could train with Kohya
+	- 
