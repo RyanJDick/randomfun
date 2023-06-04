@@ -52,18 +52,20 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 - 5000 images
 - Descriptions from unsplash alt descriptions
 - Trained for 15k steps
-- Tested a couple of 
+- Tested at various checkpoints and various LoRA scales. Results were different, but not clearly better (or worse) than the baseline model.
 
 ### (2023-06-04) text-to-image LoRA, increase rank 4 -> 64
-- Same configuration as previous experiment, but increased LoRA update matrix rank from 4 to 64.
+- Mostly same configuration as previous experiment.
+- Increased LoRA update matrix rank from 4 to 64.
+- Ran with xformers for more efficient memory usage.
 
 ## TODO
-
+- Larger batch size?
 - Train LoRA with larger rank value
 - Try to fine-tune a text-to-image model without LoRA.
 - Try to train a DreamBooth model to give a name to the interior design style
 - Add "interior design" to all prompts?
-- Generate captions with BLIP
+- Generate captions with BLIP (or WD 1.4?)
 - Try to train an inpaint model instead?
 - Look into training with multiple image resolutions
 - Experiments
@@ -73,4 +75,3 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 	- Show effect of different LoRA weightings
 - Training notes:
 	- Could train with Kohya
-	- 

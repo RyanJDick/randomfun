@@ -2,7 +2,7 @@
 set -euxo pipefail
 
 MODEL_NAME=runwayml/stable-diffusion-v1-5
-OUTPUT_DIR=finetune/lora/living_room
+OUTPUT_DIR=finetune/lora/living_room/$(date "+%Y%m%d-%H%M%S")
 DATASET_NAME=living_room_dataset_v1
 
 accelerate launch --mixed_precision="fp16" train_text_to_image_lora.py \
