@@ -21,4 +21,5 @@ accelerate launch --mixed_precision="fp16" train_text_to_image_lora.py \
   --checkpointing_steps=500 \
   --validation_prompt="A modern living room with a white couch." \
   --seed=1337 \
-  --lora_matrix_rank=64
+  --lora_matrix_rank=64 \
+  --enable_xformers_memory_efficient_attention
