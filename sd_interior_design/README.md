@@ -70,6 +70,8 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
   - Mostly the same as the previous experiment.
   - Reverted LoRA rank to 4.
   - Add the keyword "interior design" in every caption.
+- Result:
+  - Again, no clear benefit to the trained LoRA model.
 
 
 ## TODO
