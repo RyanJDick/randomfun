@@ -25,7 +25,7 @@ accelerate config
 ```
 4. Run training:
 ```bash
-./train.sh
+./train_t2i_lora.sh
 ```
 5. Monitor training with tensorboard:
 ```bash
