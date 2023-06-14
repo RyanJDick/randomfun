@@ -73,6 +73,17 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 - Result:
   - Again, no clear benefit to the trained LoRA model.
 
+## Dataset History
+
+### living_room_dataset_v1
+
+- 5000 living room images scraped from Unsplash.
+- Unsplash alt descriptions used as captions.
+
+### living_room_dataset_v2
+
+- Same 5000 images as v1.
+- All captions prefixed with "living room".
 
 ## TODO
 - Larger batch size?
