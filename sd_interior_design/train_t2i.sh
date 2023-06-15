@@ -4,7 +4,8 @@ set -euxo pipefail
 # MODEL_NAME=runwayml/stable-diffusion-v1-5
 MODEL_NAME=CompVis/stable-diffusion-v1-4
 OUTPUT_DIR=/data/finetune/t2i/living_room/$(date "+%Y%m%d-%H%M%S")
-DATASET_NAME=/data/living_room_dataset_v2
+#DATASET_NAME=/data/living_room_dataset_v2
+DATASET_NAME=lambdalabs/pokemon-blip-captions
 
 accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   --pretrained_model_name_or_path=$MODEL_NAME \
@@ -22,4 +23,5 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   --output_dir=${OUTPUT_DIR} \
   --report_to=tensorboard \
   --checkpointing_steps=500 \
-  --enable_xformers_memory_efficient_attention
+  --enable_xformers_memory_efficient_attention \
+  --validation_prompts "A pokemon with green eyes, large wings, and a hat" "A cute bunny rabbit" "Yoda" "An epic landscape photo of a mountain"
