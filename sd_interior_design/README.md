@@ -85,7 +85,19 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 - Setup
   - Same configuration as previous experiment, but use the "lambdalabs/pokemon-blip-captions" dataset.
   - The goal is to replicate the pokemon training example from the docs to determine if there is an issue with the training code.
-- Result: 
+- Result:
+  - The model seems to quickly experience catastrophic forgetting.
+  - I tested the prompt "Yoda":
+    - Before fine-tuning: Clear image of Yoda
+    - After 500 steps: Pokemon style is clearly learned and you can see some Yoda-like features, but it does not look like a Yoda-pokemon.
+    - After >4000 steps: The generated image seems to have the Pokemon style, but there is barely any resemblance to Yoda aside from the color selection. It looks like abstract art.
+
+### (2023-06-15) Checkpoint Merging
+- Setup
+  - Try to interpolate between the trained checkpoint from the previous step and the original model to workaround the problem of catastrophic forgetting.
+- Result
+  - This was a helpful tool for visualizing the differences between the base model and the fine-tuned model.
+  - I was still unable to produce the results reported for pokemon fine-tuning. It felt like the fine-tuned model had learned the pokemon "style", but not how to create characters.
 
 ## Dataset History
 

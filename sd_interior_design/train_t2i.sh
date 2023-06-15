@@ -23,5 +23,5 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   --output_dir=${OUTPUT_DIR} \
   --report_to=tensorboard \
   --checkpointing_steps=500 \
-  --enable_xformers_memory_efficient_attention \
-  --validation_prompts "A pokemon with green eyes, large wings, and a hat" "A cute bunny rabbit" "Yoda" "An epic landscape photo of a mountain"
+  --enable_xformers_memory_efficient_attention
+  #--validation_prompts "A pokemon with green eyes, large wings, and a hat" "A cute bunny rabbit" "Yoda" "An epic landscape photo of a mountain"
