@@ -3,8 +3,8 @@ set -euxo pipefail
 
 # MODEL_NAME=runwayml/stable-diffusion-v1-5
 MODEL_NAME=CompVis/stable-diffusion-v1-4
-OUTPUT_DIR=finetune/t2i/living_room/$(date "+%Y%m%d-%H%M%S")
-DATASET_NAME=living_room_dataset_v2
+OUTPUT_DIR=/data/finetune/t2i/living_room/$(date "+%Y%m%d-%H%M%S")
+DATASET_NAME=/data/living_room_dataset_v2
 
 accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   --pretrained_model_name_or_path=$MODEL_NAME \
@@ -16,6 +16,7 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   --gradient_checkpointing \
   --max_train_steps=15000 \
   --learning_rate=1e-05 \
+  --use_8bit_adam \
   --max_grad_norm=1 \
   --lr_scheduler="constant" --lr_warmup_steps=0 \
   --output_dir=${OUTPUT_DIR} \

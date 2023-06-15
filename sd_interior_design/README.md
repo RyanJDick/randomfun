@@ -73,6 +73,20 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 - Result:
   - Again, no clear benefit to the trained LoRA model.
 
+### (2023-06-14) text-to-image finetuning (no LoRA)
+- Setup:
+  - 'Plain' finetuning, without LoRA.
+  - Using 8-bit Adam Optimizer to get training to run on a T4 with 16GB of VRAM.
+- Result:
+  - Checked checkpoint after 1000 steps and 4000 steps.
+  - The quality of the generated images seemed to be getting progressively worse. On both interior design images and unrelated prompts. The results were blurry and did not clearly match the prompt.
+
+### (2023-06-14) text-to-image fintetuning w/ pokemon dataset
+- Setup
+  - Same configuration as previous experiment, but use the "lambdalabs/pokemon-blip-captions" dataset.
+  - The goal is to replicate the pokemon training example from the docs to determine if there is an issue with the training code.
+- Result: 
+
 ## Dataset History
 
 ### living_room_dataset_v1
