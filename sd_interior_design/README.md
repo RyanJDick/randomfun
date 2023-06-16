@@ -124,6 +124,7 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
   - Look into differences in loss between diffusers and JP's repo.
   - Try running JP's training script with non-EMA starting point.
 - Try using Justin Pinkney's training code to see if I can reproduce his results. First, does he do anything differently?
+  - After all of the below analysis, I found this discussion which came to the same conclusion as me about the likely source of the discrepancy: https://github.com/huggingface/diffusers/issues/1153
   - Train VAE?
     - Neither repo trains the VAE.
   - Train text encoder?
