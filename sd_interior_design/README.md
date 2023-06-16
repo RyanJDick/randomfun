@@ -99,6 +99,14 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
   - This was a helpful tool for visualizing the differences between the base model and the fine-tuned model.
   - I was still unable to produce the results reported for pokemon fine-tuning. It felt like the fine-tuned model had learned the pokemon "style", but not how to create characters.
 
+### (2023-06-15) Pokemon Finetune
+- Setup
+  - Try to reproduce the reported results with this script: https://github.com/LambdaLabsML/examples/blob/main/stable-diffusion-finetuning/pokemon_finetune.ipynb
+  - Ran on a Lambda Labs VM with an A6000 GPU (48GB VRAM).
+- Result
+  - Progress was looking much better than the previous attempts to do this with the diffusers repo.
+  - The implementations of the two repos are completely different, so it is difficult to identify the source of the discrepancy.
+
 ## Dataset History
 
 ### living_room_dataset_v1
@@ -112,14 +120,35 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 - All captions prefixed with "living room".
 
 ## TODO
-- Larger batch size?
-	- Suggestion for cloneofsimo/lora is 4: 
-- Train LoRA with larger rank value
-- Try to fine-tune a text-to-image model without LoRA.
+- Next steps:
+  - Look into differences in loss between diffusers and JP's repo.
+  - Try running JP's training script with non-EMA starting point.
+- Try using Justin Pinkney's training code to see if I can reproduce his results. First, does he do anything differently?
+  - Train VAE?
+    - Neither repo trains the VAE.
+  - Train text encoder?
+    - Neither repo trains the VAE.
+  - Batch size:
+    - JP's repos uses batch size of 8 across 2 GPUs. I tested it with 4 on 1 GPU and it worked fine.
+    - I was using the diffusers project with 4 on 1 GPU, so this shouldn't be the source of the problem.
+  - Learning rate:
+    - Base LR in JP's repo is 1e-04.
+    - Base LR in diffusers is 1e-05.
+    - The weird thing is that the LR still feels too high in the diffusers repo. Is the loss function different?
+  - Learning rate scheduler?
+    - In JP's repo, the scheduler is configured in a way that effectively just makes it a constant LR.
+    - Diffusers uses a constant LR.
+  - Starting point
+    - JP's repo explicitly uses EMA weights as a starting point.
+    - In diffusers, we are not using the EMA weights (and they don't seem to be readily available.)
+    - I could test this by running JP's repo with non-EMA weights as a starting point, to see how it does.
+  - Refer to:
+    - https://github.com/LambdaLabsML/examples/blob/main/stable-diffusion-finetuning/pokemon_finetune.ipynb
+    - https://github.com/justinpinkney/stable-diffusion/blob/main/main.py
+    - https://github.com/justinpinkney/stable-diffusion/blob/main/configs/stable-diffusion/pokemon.yaml
+- Try training with cloneofsimo/lora?
 - Try to train a DreamBooth model to give a name to the interior design style
-- Add "interior design" to all prompts?
 - Generate captions with BLIP (or WD 1.4?)
-- Try to train an inpaint model instead?
 - Look into training with multiple image resolutions
 - Experiments
 	- Show results at various checkpoints throughout the training process.
@@ -128,3 +157,4 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 	- Show effect of different LoRA weightings
 - Training notes:
 	- Could train with Kohya
+- Try to train an inpaint model instead?
