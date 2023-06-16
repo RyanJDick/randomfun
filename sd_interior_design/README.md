@@ -107,6 +107,12 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
   - Progress was looking much better than the previous attempts to do this with the diffusers repo.
   - The implementations of the two repos are completely different, so it is difficult to identify the source of the discrepancy.
 
+### (2023-06-16) Pokemon Finetune (with both ema and non-ema weights)
+- Setup
+  - Use the NON_EMA_REVISION from here: https://github.com/huggingface/diffusers/issues/1153#issuecomment-1368087432
+  - See the rest of that Github discussion for an explanation why. I suspect that this is currently the main difference between training with the CopmVis repo and the diffusers repo.
+- Result
+
 ## Dataset History
 
 ### living_room_dataset_v1
