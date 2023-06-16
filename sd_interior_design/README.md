@@ -111,7 +111,34 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 - Setup
   - Use the NON_EMA_REVISION from here: https://github.com/huggingface/diffusers/issues/1153#issuecomment-1368087432
   - See the rest of that Github discussion for an explanation why. I suspect that this is currently the main difference between training with the CopmVis repo and the diffusers repo.
+  - Full config:
+```bash
+MODEL_NAME=CompVis/stable-diffusion-v1-4
+NOM_EMA_REVISION=non-ema
+OUTPUT_DIR=/home/ubuntu/data/finetune/t2i/living_room/$(date "+%Y%m%d-%H%M%S")
+DATASET_NAME=lambdalabs/pokemon-blip-captions
+
+accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
+  --pretrained_model_name_or_path=$MODEL_NAME \
+  --dataset_name=$DATASET_NAME \
+  --non_ema_revision=$NOM_EMA_REVISION \
+  --use_ema \
+  --resolution=512 --center_crop --random_flip \
+  --train_batch_size=8 \
+  --gradient_accumulation_steps=1 \
+  --gradient_checkpointing \
+  --max_train_steps=15000 \
+  --learning_rate=1e-04 \
+  --max_grad_norm=1 \
+  --lr_scheduler="constant" --lr_warmup_steps=0 \
+  --output_dir=${OUTPUT_DIR} \
+  --report_to=tensorboard \
+  --checkpointing_steps=500 \
+  --enable_xformers_memory_efficient_attention
+```
 - Result
+  - It worked! Results looked roughly comparable to those reported in the original blog post.
+  - Looks like starting from the EMA weights makes a big difference.
 
 ## Dataset History
 
@@ -126,6 +153,7 @@ zip -r living_room_dataset_v1.zip living_room_dataset_v1
 - All captions prefixed with "living room".
 
 ## TODO
+- Open a PR on the Diffusers docs to share what I learned?
 - Next steps:
   - Look into differences in loss between diffusers and JP's repo.
   - Try running JP's training script with non-EMA starting point.
