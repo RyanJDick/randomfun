@@ -140,6 +140,37 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   - It worked! Results looked roughly comparable to those reported in the original blog post.
   - Looks like starting from the EMA weights makes a big difference.
 
+### (2023-06-29) Reproduce Pokemon finetuning for living rooms
+- Setup
+  - Same as previous experiment, but with the interior design dataset.
+  - Full config:
+```bash
+MODEL_NAME=CompVis/stable-diffusion-v1-4
+NOM_EMA_REVISION="non-ema"
+OUTPUT_DIR=/home/ubuntu/data1/data/finetune/t2i/living_room/$(date "+%Y%m%d-%H%M%S")
+DATASET_NAME=/home/ubuntu/data1/data/living_room_dataset_v2
+
+accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
+  --pretrained_model_name_or_path=$MODEL_NAME \
+  --dataset_name=$DATASET_NAME \
+  --non_ema_revision=$NOM_EMA_REVISION \
+  --use_ema \
+  --resolution=512 --center_crop --random_flip \
+  --train_batch_size=8 \
+  --gradient_accumulation_steps=1 \
+  --gradient_checkpointing \
+  --max_train_steps=15000 \
+  --learning_rate=1e-04 \
+  --max_grad_norm=1 \
+  --lr_scheduler="constant" --lr_warmup_steps=0 \
+  --output_dir=${OUTPUT_DIR} \
+  --report_to=tensorboard \
+  --checkpointing_steps=500 \
+  --enable_xformers_memory_efficient_attention \
+  --validation_prompts "A modern living room with a brown couch" "A rustic living room"
+```
+- Result
+
 ## Dataset History
 
 ### living_room_dataset_v1
