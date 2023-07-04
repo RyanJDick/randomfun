@@ -128,13 +128,12 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
 ## (2023-07-04) kohya_ss (BLIP) captions
 - Setup
   - Same as previous experiment, but using captions generated with the kohya_ss repo (uses BLIP).
-  - Some other changes were made to the config to try to get it to run in 16GB of VRAM.
   - Full config:
 ```bash
 MODEL_NAME=CompVis/stable-diffusion-v1-4
 NOM_EMA_REVISION="non-ema"
-OUTPUT_DIR=/data/finetune/t2i/living_room/$(date "+%Y%m%d-%H%M%S")
-DATASET_NAME=/data/living_room_dataset_v3
+OUTPUT_DIR=/home/ubuntu/data1/data/finetune/t2i/living_room/$(date "+%Y%m%d-%H%M%S")
+DATASET_NAME=/home/ubuntu/data1/data/living_room_dataset_v3
 
 accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   --pretrained_model_name_or_path=$MODEL_NAME \
@@ -142,8 +141,8 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   --non_ema_revision=$NOM_EMA_REVISION \
   --use_ema \
   --resolution=512 --center_crop --random_flip \
-  --train_batch_size=1 \
-  --gradient_accumulation_steps=8 \
+  --train_batch_size=8 \
+  --gradient_accumulation_steps=1 \
   --gradient_checkpointing \
   --max_train_steps=15000 \
   --learning_rate=1e-04 \
@@ -152,6 +151,5 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   --output_dir=${OUTPUT_DIR} \
   --report_to=tensorboard \
   --checkpointing_steps=500 \
-  --use_8bit_adam \
   --enable_xformers_memory_efficient_attention
 ```
