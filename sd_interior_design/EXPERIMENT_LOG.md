@@ -153,3 +153,6 @@ accelerate launch --mixed_precision="fp16"  train_text_to_image.py \
   --checkpointing_steps=500 \
   --enable_xformers_memory_efficient_attention
 ```
+- Result
+  - Very similar result to previous training attempt. Changing the captions didn't seem to have much of an effect.
+  - The finetuned model alone isn't great. The version merged with the baseline is better.
