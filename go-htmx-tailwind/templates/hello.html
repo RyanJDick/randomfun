@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+    <title>This is the title of the webpage!</title>
+
+    <script src="/static/third_party/htmx_1_9_10.min.js"></script>
+  </head>
+
+  <body>
+    <p>Hello {{ .Name }}!</p>
+
+    {{ define "hello.time" }}
+    <div>
+        <p>Time: {{ .Time }}</p>
+        <button hx-get="/time" hx-target="closest div" hx-swap="OuterHTML">Get Time</button>
+    </div>
+    {{ end }}
+    {{template "hello.time" .}}
+  </body>
+</html>

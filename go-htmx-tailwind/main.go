@@ -23,8 +23,10 @@ func main() {
 		})
 	})
 	r.GET("/hello/:name", hh.GetHello)
+	r.GET("/time", hh.GetTime)
 
 	r.StaticFile("/", "static/index.html")
+	r.Static("/static", "static/")
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
