@@ -1,30 +1,30 @@
 package main
 
 import (
-	"log"
 	"log/slog"
 	"net/http"
 
-	"github.com/ryanjdick/go-htmx-tailwind/app"
+	"github.com/gin-gonic/gin"
 	"github.com/ryanjdick/go-htmx-tailwind/app/handlers"
 )
 
 func main() {
 
+	r := gin.Default()
+	r.LoadHTMLGlob("templates/*")
+
 	logger := slog.Default()
 
-	rh := new(app.RouteHandler)
+	hh := &handlers.HelloHandler{Logger: logger}
 
-	helloHandler := &handlers.HelloHandler{Logger: logger}
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
+	r.GET("/hello/:name", hh.GetHello)
 
-	rh.Get(`^/hello/([a-zA-Z0-9]+)/?$`, helloHandler)
+	r.StaticFile("/", "static/index.html")
 
-	http.Handle("/", rh)
-
-	// http.HandleFunc("/", handleIndex)
-
-	// fs := http.FileServer(http.Dir("static/"))
-	// http.Handle("/static/", http.StripPrefix("/static/", fs))
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
