@@ -1,28 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/ryanjdick/go-htmx-tailwind/app"
+	"github.com/ryanjdick/go-htmx-tailwind/app/handlers"
 )
-
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	name, err := app.GetRouteParam(r, 0)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-
-	fmt.Fprintf(w, "Hi %s!", name)
-}
 
 func main() {
 
+	logger := slog.Default()
+
 	rh := new(app.RouteHandler)
 
-	rh.GetFn(`^/hi/([a-zA-Z0-9]+)/?$`, handleIndex)
+	helloHandler := &handlers.HelloHandler{Logger: logger}
+
+	rh.Get(`^/hello/([a-zA-Z0-9]+)/?$`, helloHandler)
 
 	http.Handle("/", rh)
 
