@@ -1,32 +1,30 @@
 package main
 
 import (
-	"log/slog"
+	"encoding/json"
+	"html/template"
+	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/ryanjdick/go-htmx-tailwind/app/handlers"
 )
 
 func main() {
+	// TODO: Log every request, including timing, and response code.
+	// TODO: Log all available routes on startup.
 
-	r := gin.Default()
-	r.LoadHTMLGlob("templates/*")
+	tmpl := template.Must(template.ParseFiles("templates/hello.html"))
 
-	logger := slog.Default()
-
-	hh := &handlers.HelloHandler{Logger: logger}
-
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
+	http.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "pong"})
 	})
-	r.GET("/hello/:name", hh.GetHello)
-	r.GET("/time", hh.GetTime)
 
-	r.StaticFile("/", "static/index.html")
-	r.Static("/static", "static/")
+	http.Handle("GET /hello/{name}", handlers.BuildGetHelloHandler(tmpl))
+	http.Handle("GET /time", handlers.BuildGetTimeHandler(tmpl))
+	http.Handle("GET /", http.FileServer(http.Dir("static")))
 
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	// logger := slog.Default()
+
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

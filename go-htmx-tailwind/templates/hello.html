@@ -3,7 +3,7 @@
   <head>
     <title>This is the title of the webpage!</title>
 
-    <script src="/static/third_party/htmx_1_9_10.min.js"></script>
+    <script src="/third_party/htmx_1_9_10.min.js"></script>
   </head>
 
   <body>
@@ -12,7 +12,7 @@
     {{ define "hello.time" }}
     <div>
         <p>Time: {{ .Time }}</p>
-        <button hx-get="/time" hx-target="closest div" hx-swap="OuterHTML">Get Time</button>
+        <button hx-get="/time" hx-target="closest div" hx-swap="outerHTML">Get Time</button>
     </div>
     {{ end }}
     {{template "hello.time" .}}

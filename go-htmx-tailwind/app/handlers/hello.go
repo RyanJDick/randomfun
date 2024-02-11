@@ -1,31 +1,31 @@
 package handlers
 
 import (
-	"log/slog"
+	"html/template"
 	"net/http"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
-
-type helloData struct {
-	Name string
-	Time string
-}
-
-type HelloHandler struct {
-	Logger *slog.Logger
-}
 
 func getTime() string {
 	return time.Now().Format(time.RFC1123)
 }
 
-func (hh *HelloHandler) GetHello(c *gin.Context) {
-	name := c.Param("name")
-	c.HTML(http.StatusOK, "hello.html", helloData{Name: name, Time: getTime()})
+func BuildGetHelloHandler(tmpl *template.Template) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		helloData := struct {
+			Name string
+			Time string
+		}{
+			Name: r.PathValue("name"),
+			Time: getTime(),
+		}
+		tmpl.ExecuteTemplate(w, "hello.html", helloData)
+	})
 }
 
-func (hh *HelloHandler) GetTime(c *gin.Context) {
-	c.HTML(http.StatusOK, "hello.time", gin.H{"Time": getTime()})
+func BuildGetTimeHandler(tmpl *template.Template) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		timeData := struct{ Time string }{Time: getTime()}
+		tmpl.ExecuteTemplate(w, "hello.time", timeData)
+	})
 }
