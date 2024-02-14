@@ -1,12 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/ryanjdick/go-htmx-tailwind/app/handlers"
+	"github.com/ryanjdick/go-htmx-tailwind/app/middleware"
 )
 
 func main() {
@@ -15,16 +16,11 @@ func main() {
 
 	tmpl := template.Must(template.ParseFiles("templates/hello.html"))
 
-	http.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"message": "pong"})
-	})
+	logger := slog.Default()
 
-	http.Handle("GET /hello/{name}", handlers.BuildGetHelloHandler(tmpl))
-	http.Handle("GET /time", handlers.BuildGetTimeHandler(tmpl))
-	http.Handle("GET /", http.FileServer(http.Dir("static")))
-
-	// logger := slog.Default()
+	http.Handle("GET /hello/{name}", middleware.WithLogging(logger, handlers.BuildGetHelloHandler(tmpl)))
+	http.Handle("GET /time", middleware.WithLogging(logger, handlers.BuildGetTimeHandler(tmpl)))
+	http.Handle("GET /", middleware.WithLogging(logger, http.FileServer(http.Dir("static"))))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
