@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ryanjdick/go-htmx-tailwind/app/handlers"
-	"github.com/ryanjdick/go-htmx-tailwind/app/middleware"
+	"github.com/ryanjdick/go-htmx-tailwind/internal/handlers"
+	"github.com/ryanjdick/go-htmx-tailwind/internal/middleware"
 )
 
 type config struct {
