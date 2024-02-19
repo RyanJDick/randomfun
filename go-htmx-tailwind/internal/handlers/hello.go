@@ -1,16 +1,17 @@
 package handlers
 
 import (
-	"html/template"
 	"net/http"
 	"time"
+
+	"github.com/ryanjdick/go-htmx-tailwind/internal/utils"
 )
 
 func getTime() string {
 	return time.Now().Format(time.RFC1123)
 }
 
-func BuildGetHelloHandler(tmpl *template.Template, mainJSPath string, mainCSSPath string) http.Handler {
+func BuildGetHelloHandler(tmpl utils.TemplateExecutor, mainJSPath string, mainCSSPath string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		helloData := struct {
 			MainJSPath  string
@@ -27,7 +28,7 @@ func BuildGetHelloHandler(tmpl *template.Template, mainJSPath string, mainCSSPat
 	})
 }
 
-func BuildGetTimeHandler(tmpl *template.Template) http.Handler {
+func BuildGetTimeHandler(tmpl utils.TemplateExecutor) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		timeData := struct{ Time string }{Time: getTime()}
 		tmpl.ExecuteTemplate(w, "hello.time", timeData)

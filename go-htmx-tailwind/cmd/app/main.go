@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"log/slog"
 	"net"
 	"net/http"
@@ -28,10 +27,12 @@ func run(ctx context.Context, logger *slog.Logger, cfg config) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
-	tmpl, err := template.ParseFiles("templates/hello.html")
-	if err != nil {
-		return fmt.Errorf("failed to parse template files: %w", err)
-	}
+	// TODO: Select template type based on dev vs. prod configuration.
+	// tmpl, err := template.ParseFiles("templates/hello.html")
+	// if err != nil {
+	// 	return fmt.Errorf("failed to parse template files: %w", err)
+	// }
+	tmpl := utils.NewDevTemplate("templates/hello.html")
 
 	viteManifest, err := utils.LoadViteManifestFromFile(path.Join(cfg.viteBuildDir, ".vite/manifest.json"))
 	if err != nil {
