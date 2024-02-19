@@ -3,6 +3,7 @@
   <head>
     <title>This is the title of the webpage!</title>
     <script type="module" src="{{ .MainJSPath }}"></script>
+    <link rel="stylesheet" href="{{ .MainCSSPath }}">
   </head>
 
   <body>
@@ -11,7 +12,7 @@
     {{ define "hello.time" }}
     <div>
         <p>Time: {{ .Time }}</p>
-        <button hx-get="/time" hx-target="closest div" hx-swap="outerHTML">Get Time</button>
+        <button hx-get="/time" hx-target="closest div" hx-swap="outerHTML" class="p-8 border-gray-500 border-2 bg-gray-50">Get Time</button>
     </div>
     {{ end }}
     {{template "hello.time" .}}

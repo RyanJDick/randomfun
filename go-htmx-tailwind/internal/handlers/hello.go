@@ -10,16 +10,18 @@ func getTime() string {
 	return time.Now().Format(time.RFC1123)
 }
 
-func BuildGetHelloHandler(tmpl *template.Template, mainJSPath string) http.Handler {
+func BuildGetHelloHandler(tmpl *template.Template, mainJSPath string, mainCSSPath string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		helloData := struct {
-			MainJSPath string
-			Name       string
-			Time       string
+			MainJSPath  string
+			MainCSSPath string
+			Name        string
+			Time        string
 		}{
-			MainJSPath: mainJSPath,
-			Name:       r.PathValue("name"),
-			Time:       getTime(),
+			MainJSPath:  mainJSPath,
+			MainCSSPath: mainCSSPath,
+			Name:        r.PathValue("name"),
+			Time:        getTime(),
 		}
 		tmpl.ExecuteTemplate(w, "hello.html", helloData)
 	})

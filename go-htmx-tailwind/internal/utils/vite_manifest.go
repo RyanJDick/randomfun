@@ -6,13 +6,16 @@ import (
 	"os"
 )
 
+type viteManifestFileInfo struct {
+	File    string `json:"file"`
+	Src     string `json:"src"`
+	IsEntry bool   `json:"isEntry"`
+}
+
 // ViteManifest is used to load '.vite/manifest.json' files.
 type ViteManifest struct {
-	MainJSFile struct {
-		File    string `json:"file"`
-		Src     string `json:"src"`
-		IsEntry bool   `json:"isEntry"`
-	} `json:"src/main.ts"`
+	MainJSFile  viteManifestFileInfo `json:"src/main.ts"`
+	MainCSSFile viteManifestFileInfo `json:"src/main.css"`
 }
 
 func LoadViteManifestFromFile(filename string) (ViteManifest, error) {

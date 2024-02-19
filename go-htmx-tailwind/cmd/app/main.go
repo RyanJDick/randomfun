@@ -38,9 +38,20 @@ func run(ctx context.Context, logger *slog.Logger, cfg config) error {
 		return fmt.Errorf("failed to load Vite manifest: %w", err)
 	}
 
-	http.Handle("GET /hello/{name}", middleware.WithLogging(logger, handlers.BuildGetHelloHandler(tmpl, "/"+viteManifest.MainJSFile.File)))
-	http.Handle("GET /time", middleware.WithLogging(logger, handlers.BuildGetTimeHandler(tmpl)))
-	logger.Info(path.Join(cfg.viteBuildDir, "assets"))
+	http.Handle(
+		"GET /hello/{name}",
+		middleware.WithLogging(
+			logger,
+			handlers.BuildGetHelloHandler(tmpl, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
+		),
+	)
+	http.Handle(
+		"GET /time",
+		middleware.WithLogging(
+			logger,
+			handlers.BuildGetTimeHandler(tmpl),
+		),
+	)
 	http.Handle(
 		"GET /assets/",
 		middleware.WithLogging(
