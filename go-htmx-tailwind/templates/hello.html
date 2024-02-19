@@ -2,12 +2,11 @@
 <html>
   <head>
     <title>This is the title of the webpage!</title>
-
-    <script src="/third_party/htmx_1_9_10.min.js"></script>
+    <script type="module" src="{{ .MainJSPath }}"></script>
   </head>
 
   <body>
-    <p>Hello {{ .Name }}!</p>
+    <p>Hello to {{ .Name }}!</p>
 
     {{ define "hello.time" }}
     <div>

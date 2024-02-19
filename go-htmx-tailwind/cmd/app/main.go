@@ -9,16 +9,19 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
 	"sync"
 	"time"
 
 	"github.com/ryanjdick/go-htmx-tailwind/internal/handlers"
 	"github.com/ryanjdick/go-htmx-tailwind/internal/middleware"
+	"github.com/ryanjdick/go-htmx-tailwind/internal/utils"
 )
 
 type config struct {
-	Host string
-	Port string
+	Host         string
+	Port         string
+	viteBuildDir string
 }
 
 func run(ctx context.Context, logger *slog.Logger, cfg config) error {
@@ -27,11 +30,24 @@ func run(ctx context.Context, logger *slog.Logger, cfg config) error {
 
 	tmpl, err := template.ParseFiles("templates/hello.html")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse template files: %w", err)
 	}
 
-	http.Handle("GET /hello/{name}", middleware.WithLogging(logger, handlers.BuildGetHelloHandler(tmpl)))
+	viteManifest, err := utils.LoadViteManifestFromFile(path.Join(cfg.viteBuildDir, ".vite/manifest.json"))
+	if err != nil {
+		return fmt.Errorf("failed to load Vite manifest: %w", err)
+	}
+
+	http.Handle("GET /hello/{name}", middleware.WithLogging(logger, handlers.BuildGetHelloHandler(tmpl, "/"+viteManifest.MainJSFile.File)))
 	http.Handle("GET /time", middleware.WithLogging(logger, handlers.BuildGetTimeHandler(tmpl)))
+	logger.Info(path.Join(cfg.viteBuildDir, "assets"))
+	http.Handle(
+		"GET /assets/",
+		middleware.WithLogging(
+			logger,
+			http.StripPrefix("/assets/", http.FileServer(http.Dir(path.Join(cfg.viteBuildDir, "assets")))),
+		),
+	)
 	http.Handle("GET /", middleware.WithLogging(logger, http.FileServer(http.Dir("static"))))
 
 	addr := ":8080"
@@ -66,6 +82,8 @@ func run(ctx context.Context, logger *slog.Logger, cfg config) error {
 	}()
 	wg.Wait()
 
+	logger.Info("shutting down...")
+
 	return nil
 }
 
@@ -73,8 +91,9 @@ func main() {
 	ctx := context.Background()
 	logger := slog.Default()
 	cfg := config{
-		Host: "localhost",
-		Port: "8080",
+		Host:         "localhost",
+		Port:         "8080",
+		viteBuildDir: "frontend/dist",
 	}
 	if err := run(ctx, logger, cfg); err != nil {
 		logger.Error(fmt.Sprintf("server error: %v", err))

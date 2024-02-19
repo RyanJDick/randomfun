@@ -9,10 +9,9 @@ A web app template built with:
 
 Build and run with:
 ```bash
+# Run vite build from (from /frontend).
+pnpm build
+
+# Build and run the app (from /).
 go run ./cmd/app
 ```
-
-## Decisions
-
-- Keep the list of dependencies as small as possible.
-- Structure the project code based on the "Server Project" recommendation [here](https://go.dev/doc/modules/layout)
