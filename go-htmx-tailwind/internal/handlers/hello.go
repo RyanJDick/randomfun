@@ -11,18 +11,20 @@ func getTime() string {
 	return time.Now().Format(time.RFC1123)
 }
 
-func BuildGetHelloHandler(tmpl utils.TemplateExecutor, mainJSPath string, mainCSSPath string) http.Handler {
+func BuildGetHelloHandler(tmpl utils.TemplateExecutor, envConfig *utils.EnvConfig, mainJSPath string, mainCSSPath string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		helloData := struct {
-			MainJSPath  string
-			MainCSSPath string
-			Name        string
-			Time        string
+			IsDevelopment bool
+			MainJSPath    string
+			MainCSSPath   string
+			Name          string
+			Time          string
 		}{
-			MainJSPath:  mainJSPath,
-			MainCSSPath: mainCSSPath,
-			Name:        r.PathValue("name"),
-			Time:        getTime(),
+			IsDevelopment: envConfig.Environment == utils.EEDevelopment,
+			MainJSPath:    mainJSPath,
+			MainCSSPath:   mainCSSPath,
+			Name:          r.PathValue("name"),
+			Time:          getTime(),
 		}
 		tmpl.ExecuteTemplate(w, "hello.html", helloData)
 	})

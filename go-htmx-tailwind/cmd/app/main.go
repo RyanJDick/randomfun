@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"path"
 	"sync"
+	"text/template"
 	"time"
 
 	"github.com/ryanjdick/go-htmx-tailwind/internal/handlers"
@@ -27,12 +28,22 @@ func run(ctx context.Context, logger *slog.Logger, cfg config) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
-	// TODO: Select template type based on dev vs. prod configuration.
-	// tmpl, err := template.ParseFiles("templates/hello.html")
-	// if err != nil {
-	// 	return fmt.Errorf("failed to parse template files: %w", err)
-	// }
-	tmpl := utils.NewDevTemplate("templates/hello.html")
+	envConfig, err := utils.LoadEnv()
+	if err != nil {
+		return fmt.Errorf("failed to load env: %w", err)
+	}
+
+	// Prepare TemplateExecutor.
+	var tmpl utils.TemplateExecutor
+	templateFilenames := "templates/hello.html"
+	if envConfig.Environment == utils.EEDevelopment {
+		tmpl = utils.NewDevTemplate(templateFilenames)
+	} else {
+		tmpl, err = template.ParseFiles(templateFilenames)
+		if err != nil {
+			return fmt.Errorf("failed to parse template files: %w", err)
+		}
+	}
 
 	viteManifest, err := utils.LoadViteManifestFromFile(path.Join(cfg.viteBuildDir, ".vite/manifest.json"))
 	if err != nil {
@@ -43,7 +54,7 @@ func run(ctx context.Context, logger *slog.Logger, cfg config) error {
 		"GET /hello/{name}",
 		middleware.WithLogging(
 			logger,
-			handlers.BuildGetHelloHandler(tmpl, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
+			handlers.BuildGetHelloHandler(tmpl, envConfig, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
 		),
 	)
 	http.Handle(

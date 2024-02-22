@@ -19,4 +19,6 @@ go run ./cmd/app
 
 ## TODO
 
-Currently, the vite manifest is not reloaded during dev mode. This needs to be fixed based on the suggestions here: https://vitejs.dev/guide/backend-integration.html
+- Add support for .env file.
+- Log .env config on startup.
+- Replace hard-coded config with .env config
