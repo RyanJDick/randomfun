@@ -14,7 +14,7 @@ Dev mode:
 pnpm dev
 
 # Build and run the app (from /).
-go run ./cmd/app
+ENVIRONMENT="development" go run ./cmd/app
 ```
 
 ## TODO
