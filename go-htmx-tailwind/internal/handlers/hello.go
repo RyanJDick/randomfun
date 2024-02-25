@@ -11,7 +11,7 @@ func getTime() string {
 	return time.Now().Format(time.RFC1123)
 }
 
-func BuildGetHelloHandler(tmpl utils.TemplateExecutor, envConfig *utils.EnvConfig, mainJSPath string, mainCSSPath string) http.Handler {
+func BuildGetHelloHandler(tmpl utils.TemplateExecutor, envConfig *utils.AppConfig, mainJSPath string, mainCSSPath string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		helloData := struct {
 			IsDevelopment bool

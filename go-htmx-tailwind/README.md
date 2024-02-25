@@ -21,4 +21,3 @@ ENVIRONMENT="development" go run ./cmd/app
 
 - Add support for .env file.
 - Log .env config on startup.
-- Replace hard-coded config with .env config

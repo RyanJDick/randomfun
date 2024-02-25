@@ -18,34 +18,24 @@ import (
 	"github.com/ryanjdick/go-htmx-tailwind/internal/utils"
 )
 
-type config struct {
-	Host         string
-	Port         string
-	viteBuildDir string
-}
-
-func run(ctx context.Context, logger *slog.Logger, cfg config) error {
+func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
-
-	envConfig, err := utils.LoadEnv()
-	if err != nil {
-		return fmt.Errorf("failed to load env: %w", err)
-	}
 
 	// Prepare TemplateExecutor.
 	var tmpl utils.TemplateExecutor
 	templateFilenames := "templates/hello.html"
-	if envConfig.Environment == utils.EEDevelopment {
+	if cfg.Environment == utils.EEDevelopment {
 		tmpl = utils.NewDevTemplate(templateFilenames)
 	} else {
+		var err error
 		tmpl, err = template.ParseFiles(templateFilenames)
 		if err != nil {
 			return fmt.Errorf("failed to parse template files: %w", err)
 		}
 	}
 
-	viteManifest, err := utils.LoadViteManifestFromFile(path.Join(cfg.viteBuildDir, ".vite/manifest.json"))
+	viteManifest, err := utils.LoadViteManifestFromFile(path.Join(cfg.ViteBuildDir, ".vite/manifest.json"))
 	if err != nil {
 		return fmt.Errorf("failed to load Vite manifest: %w", err)
 	}
@@ -54,7 +44,7 @@ func run(ctx context.Context, logger *slog.Logger, cfg config) error {
 		"GET /hello/{name}",
 		middleware.WithLogging(
 			logger,
-			handlers.BuildGetHelloHandler(tmpl, envConfig, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
+			handlers.BuildGetHelloHandler(tmpl, cfg, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
 		),
 	)
 	http.Handle(
@@ -68,13 +58,10 @@ func run(ctx context.Context, logger *slog.Logger, cfg config) error {
 		"GET /assets/",
 		middleware.WithLogging(
 			logger,
-			http.StripPrefix("/assets/", http.FileServer(http.Dir(path.Join(cfg.viteBuildDir, "assets")))),
+			http.StripPrefix("/assets/", http.FileServer(http.Dir(path.Join(cfg.ViteBuildDir, "assets")))),
 		),
 	)
 	http.Handle("GET /", middleware.WithLogging(logger, http.FileServer(http.Dir("static"))))
-
-	addr := ":8080"
-	logger.InfoContext(ctx, fmt.Sprintf("Starting server at %v", addr))
 
 	httpServer := &http.Server{
 		Addr:        net.JoinHostPort(cfg.Host, cfg.Port),
@@ -113,11 +100,14 @@ func run(ctx context.Context, logger *slog.Logger, cfg config) error {
 func main() {
 	ctx := context.Background()
 	logger := slog.Default()
-	cfg := config{
-		Host:         "localhost",
-		Port:         "8080",
-		viteBuildDir: "frontend/dist",
+
+	cfg, err := utils.LoadAppConfigFromEnv()
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to load app config from env: %v", err))
+		os.Exit(1)
 	}
+	logger.Info(fmt.Sprintf("Launching with app config:\n%v", cfg))
+
 	if err := run(ctx, logger, cfg); err != nil {
 		logger.Error(fmt.Sprintf("server error: %v", err))
 		os.Exit(1)
