@@ -1,9 +1,6 @@
 package utils
 
-import (
-	"fmt"
-	"os"
-)
+import "fmt"
 
 type EnvironmentEnum struct {
 	environment string
@@ -40,16 +37,27 @@ func (a *AppConfig) String() string {
 	)
 }
 
+// LoadAppConfigFromEnv loads the application configuration from environment
+// variables or a .env file. Environment variables take precedence over values
+// set in the .env.
 func LoadAppConfigFromEnv() (*AppConfig, error) {
-	environment, err := NewEnvironmentEnum(os.Getenv("ENVIRONMENT"))
+	envManager := NewEnvironmentManager()
+	envManager.LoadDotEnvFile(".env")
+
+	// Load "ENVIRONMENT" environment variable.
+	environmentValue, ok := envManager.LookupEnv("ENVIRONMENT")
+	if !ok {
+		return nil, fmt.Errorf("environment variable 'ENVIRONMENT' is not set")
+	}
+	environment, err := NewEnvironmentEnum(environmentValue)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create environment value: %w", err)
 	}
 
 	return &AppConfig{
-		Host:         "localhost",
-		Port:         "8080",
-		ViteBuildDir: "frontend/dist",
+		Host:         envManager.GetEnvWithDefault("HOST", "localhost"),
+		Port:         envManager.GetEnvWithDefault("PORT", "8080"),
+		ViteBuildDir: envManager.GetEnvWithDefault("VITE_BUILD_DIR", "frontend/dist"),
 		Environment:  environment,
 	}, nil
 }

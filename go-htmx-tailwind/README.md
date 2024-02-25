@@ -16,8 +16,3 @@ pnpm dev
 # Build and run the app (from /).
 ENVIRONMENT="development" go run ./cmd/app
 ```
-
-## TODO
-
-- Add support for .env file.
-- Log .env config on startup.
