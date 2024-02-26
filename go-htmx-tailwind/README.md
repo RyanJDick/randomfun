@@ -10,7 +10,6 @@ A web app template built with:
 Dev mode:
 ```bash
 # Run vite in dev mode (from /frontend).
-# Note that this runs `vite build --watch` under the hood.
 pnpm dev
 
 # Build and run the app (from /).
