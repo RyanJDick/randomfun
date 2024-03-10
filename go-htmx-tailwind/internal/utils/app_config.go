@@ -28,6 +28,10 @@ type AppConfig struct {
 	Port         string
 	ViteBuildDir string
 	Environment  EnvironmentEnum
+
+	// DB configs
+	DBPath         string
+	DBMigrationDir string
 }
 
 func (a *AppConfig) String() string {
@@ -55,9 +59,11 @@ func LoadAppConfigFromEnv() (*AppConfig, error) {
 	}
 
 	return &AppConfig{
-		Host:         envManager.GetEnvWithDefault("HOST", "localhost"),
-		Port:         envManager.GetEnvWithDefault("PORT", "8080"),
-		ViteBuildDir: envManager.GetEnvWithDefault("VITE_BUILD_DIR", "frontend/dist"),
-		Environment:  environment,
+		Host:           envManager.GetEnvWithDefault("HOST", "localhost"),
+		Port:           envManager.GetEnvWithDefault("PORT", "8080"),
+		ViteBuildDir:   envManager.GetEnvWithDefault("VITE_BUILD_DIR", "frontend/dist"),
+		Environment:    environment,
+		DBPath:         envManager.GetEnvWithDefault("DB_PATH", "db.sqlite"),
+		DBMigrationDir: envManager.GetEnvWithDefault("DB_MIGRATION_DIR", "migrations"),
 	}, nil
 }

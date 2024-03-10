@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"net"
@@ -13,6 +14,8 @@ import (
 	"text/template"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/ryanjdick/go-htmx-tailwind/internal/db_utils"
 	"github.com/ryanjdick/go-htmx-tailwind/internal/handlers"
 	"github.com/ryanjdick/go-htmx-tailwind/internal/middleware"
 	"github.com/ryanjdick/go-htmx-tailwind/internal/utils"
@@ -21,6 +24,22 @@ import (
 func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
+
+	// Connect to DB.
+	db, err := sql.Open("sqlite3", cfg.DBPath)
+	if err != nil {
+		return fmt.Errorf("failed to open database: %w", err)
+	}
+	defer db.Close()
+
+	// Run DB migrations.
+	migrater, err := db_utils.NewMigrater(db, cfg.DBMigrationDir)
+	if err != nil {
+		return fmt.Errorf("failed to create db migrater: %w", err)
+	}
+	logger.Info("Starting DB migrations.")
+	migrater.Migrate(ctx)
+	logger.Info("DB migrations complete")
 
 	// Prepare TemplateExecutor.
 	var tmpl utils.TemplateExecutor
