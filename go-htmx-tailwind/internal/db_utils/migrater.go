@@ -68,7 +68,7 @@ func (m *Migrater) Migrate(ctx context.Context) error {
 	// Create the migrations table if it does not exist.
 	_, err := m.db.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS migrations (
-			id SERIAL PRIMARY KEY,
+			id INTEGER PRIMARY KEY,
 			version INTEGER NOT NULL UNIQUE,
 			name TEXT NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
