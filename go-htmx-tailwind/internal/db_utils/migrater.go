@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
@@ -15,11 +16,12 @@ type migration struct {
 }
 
 type Migrater struct {
+	logger         *slog.Logger
 	db             *sql.DB
 	migrationFiles []*migrationFile
 }
 
-func NewMigrater(db *sql.DB, migrationDir string) (*Migrater, error) {
+func NewMigrater(logger *slog.Logger, db *sql.DB, migrationDir string) (*Migrater, error) {
 	// Get all migration files from the migration directory.
 	files, err := filepath.Glob(filepath.Join(migrationDir, "*.sql"))
 	if err != nil {
@@ -42,9 +44,10 @@ func NewMigrater(db *sql.DB, migrationDir string) (*Migrater, error) {
 		return migrationFiles[i].Version() < migrationFiles[j].Version()
 	})
 
-	return &Migrater{db: db, migrationFiles: migrationFiles}, nil
+	return &Migrater{logger: logger, db: db, migrationFiles: migrationFiles}, nil
 }
 
+// getAllMigrations returns all migrations from the migrations table ordered by ascending version.
 func (m *Migrater) getAllMigrations(ctx context.Context) ([]*migration, error) {
 	rows, err := m.db.QueryContext(ctx, "SELECT version, name FROM migrations ORDER BY version ASC;")
 	if err != nil {
@@ -98,6 +101,9 @@ func (m *Migrater) Migrate(ctx context.Context) error {
 		}
 	}
 
+	// Log number of migrations to be executed.
+	m.logger.Info(fmt.Sprintf("Applying %d new database migration(s).", len(m.migrationFiles)-len(completedMigrations)))
+
 	// Migrate the database to the latest version.
 	for _, migrationFile := range m.migrationFiles[len(completedMigrations):] {
 		// Read the migration file.
@@ -137,6 +143,20 @@ func (m *Migrater) Migrate(ctx context.Context) error {
 		if err := tx.Commit(); err != nil {
 			return fmt.Errorf("failed to commit db transaction: %w", err)
 		}
+
+		// Log that a migration was applied.
+		m.logger.Info(fmt.Sprintf("Applied migration %d: '%s'.", migrationFile.Version(), migrationFile.Name()))
+	}
+
+	// Get updated migration history, and log the current version.
+	completedMigrations, err = m.getAllMigrations(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get completed migrations: %w", err)
+	}
+	if len(completedMigrations) == 0 {
+		m.logger.Info("No database migrations have been applied yet.")
+	} else {
+		m.logger.Info(fmt.Sprintf("The current database version is %d.", completedMigrations[len(completedMigrations)-1].Version))
 	}
 
 	return nil

@@ -3,6 +3,7 @@ package db_utils
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 	"os"
 	"path"
 	"testing"
@@ -45,7 +46,7 @@ func TestMigrater_Migrate(t *testing.T) {
 	defer db.Close()
 
 	// Perform the database migration.
-	migrater, err := NewMigrater(db, migrationDir)
+	migrater, err := NewMigrater(slog.Default(), db, migrationDir)
 	assert.NoError(t, err)
 	ctx := context.Background()
 	err = migrater.Migrate(ctx)
@@ -80,7 +81,7 @@ func TestMigrater_NoMigrations(t *testing.T) {
 	defer db.Close()
 
 	// Perform the database migration.
-	migrater, err := NewMigrater(db, migrationDir)
+	migrater, err := NewMigrater(slog.Default(), db, migrationDir)
 	assert.NoError(t, err)
 	ctx := context.Background()
 	err = migrater.Migrate(ctx)
@@ -124,7 +125,7 @@ func TestMigrater_MigratePartial(t *testing.T) {
 	defer db.Close()
 
 	// Perform the database migration.
-	migrater, err := NewMigrater(db, migrationDir)
+	migrater, err := NewMigrater(slog.Default(), db, migrationDir)
 	assert.NoError(t, err)
 	ctx := context.Background()
 	err = migrater.Migrate(ctx)
@@ -150,7 +151,7 @@ func TestMigrater_MigratePartial(t *testing.T) {
 	}
 
 	// Perform the database migration.
-	migrater, err = NewMigrater(db, migrationDir)
+	migrater, err = NewMigrater(slog.Default(), db, migrationDir)
 	assert.NoError(t, err)
 	err = migrater.Migrate(ctx)
 	assert.NoError(t, err)
@@ -197,7 +198,7 @@ func TestMigrater_MigrationMismatch(t *testing.T) {
 	defer db.Close()
 
 	// Perform the database migration.
-	migrater, err := NewMigrater(db, migrationDir)
+	migrater, err := NewMigrater(slog.Default(), db, migrationDir)
 	assert.NoError(t, err)
 	ctx := context.Background()
 	err = migrater.Migrate(ctx)
@@ -225,7 +226,7 @@ func TestMigrater_MigrationMismatch(t *testing.T) {
 	}
 
 	// Attempting to run a migration should return an error.
-	migrater, err = NewMigrater(db, migrationDir)
+	migrater, err = NewMigrater(slog.Default(), db, migrationDir)
 	assert.NoError(t, err)
 	err = migrater.Migrate(ctx)
 	assert.Error(t, err)

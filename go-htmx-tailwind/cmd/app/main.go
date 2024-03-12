@@ -33,11 +33,11 @@ func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 	defer db.Close()
 
 	// Run DB migrations.
-	migrater, err := db_utils.NewMigrater(db, cfg.DBMigrationDir)
+	migrater, err := db_utils.NewMigrater(logger, db, cfg.DBMigrationDir)
 	if err != nil {
 		return fmt.Errorf("failed to create db migrater: %w", err)
 	}
-	logger.Info("Starting DB migrations.")
+	logger.Info("Applying DB migrations.")
 	migrater.Migrate(ctx)
 	logger.Info("DB migrations complete")
 
