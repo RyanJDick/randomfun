@@ -1,27 +1,18 @@
 <!doctype html>
 <html>
-  <head>
-    <title>This is the title of the webpage!</title>
-    <base href="/">
-    {{ if .IsDevelopment }}
-      <script type="module" src="http://localhost:5173/@vite/client"></script>
-      <script type="module" src="http://localhost:5173/src/main.ts"></script>
-      <link rel="stylesheet" href="http://localhost:5173/src/main.css">
-    {{ else }}
-      <script type="module" src="{{ .MainJSPath }}"></script>
-      <link rel="stylesheet" href="{{ .MainCSSPath }}">
-    {{ end }}
-  </head>
+{{ template "head.html" .Head }}
 
-  <body>
-    <p>Hello to {{ .Name }}!</p>
+<body>
+  <p>Hello to {{ .Name }}!</p>
 
-    {{ define "hello.time" }}
-    <div>
-        <p>The time: {{ .Time }}</p>
-        <button hx-get="/time" hx-target="closest div" hx-swap="outerHTML" class="p-8 border-gray-800 border-2 bg-gray-300">Get Time</button>
-    </div>
-    {{ end }}
-    {{template "hello.time" .}}
-  </body>
+  {{ define "hello.time" }}
+  <div>
+    <p>The time: {{ .Time }}</p>
+    <button hx-get="/time" hx-target="closest div" hx-swap="outerHTML"
+      class="p-8 border-gray-800 border-2 bg-gray-300">Get Time</button>
+  </div>
+  {{ end }}
+  {{template "hello.time" .}}
+</body>
+
 </html>

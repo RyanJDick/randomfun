@@ -43,12 +43,12 @@ func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 
 	// Prepare TemplateExecutor.
 	var tmpl utils.TemplateExecutor
-	templateFilenames := "templates/hello.html"
+	templateFilenames := []string{"templates/index.html", "templates/hello.html", "templates/head.html"}
 	if cfg.Environment == utils.EEDevelopment {
-		tmpl = utils.NewDevTemplate(templateFilenames)
+		tmpl = utils.NewDevTemplate(templateFilenames...)
 	} else {
 		var err error
-		tmpl, err = template.ParseFiles(templateFilenames)
+		tmpl, err = template.ParseFiles(templateFilenames...)
 		if err != nil {
 			return fmt.Errorf("failed to parse template files: %w", err)
 		}
@@ -63,7 +63,7 @@ func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 		"GET /hello/{name}",
 		middleware.WithLogging(
 			logger,
-			handlers.BuildGetHelloHandler(tmpl, cfg, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
+			handlers.BuildGetHelloHandler(tmpl, logger, cfg, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
 		),
 	)
 	http.Handle(
@@ -80,7 +80,13 @@ func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 			http.StripPrefix("/assets/", http.FileServer(http.Dir(path.Join(cfg.ViteBuildDir, "assets")))),
 		),
 	)
-	http.Handle("GET /", middleware.WithLogging(logger, http.FileServer(http.Dir("static"))))
+	http.Handle(
+		"GET /",
+		middleware.WithLogging(
+			logger,
+			handlers.BuildGetIndexHandler(tmpl, cfg, logger, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
+		),
+	)
 
 	httpServer := &http.Server{
 		Addr:        net.JoinHostPort(cfg.Host, cfg.Port),
