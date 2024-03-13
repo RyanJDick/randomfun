@@ -87,6 +87,13 @@ func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 		),
 	)
 	http.Handle(
+		"DELETE /todo/{id}",
+		middleware.WithLogging(
+			logger,
+			handlers.BuildDeleteTodoHandler(tmpl, logger, db, cfg, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
+		),
+	)
+	http.Handle(
 		"GET /time",
 		middleware.WithLogging(
 			logger,

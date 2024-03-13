@@ -9,7 +9,8 @@
         <ol id="todo-list">
             {{ range .TodoItems }}
             <li class="p-1">
-                {{ .Description }}
+                <span>{{ .Description }}</span>
+                <button hx-delete="/todo/{{ .Id }}" hx-target="#todo-list">Delete</button>
             </li>
             {{ end }}
         </ol>

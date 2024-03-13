@@ -40,3 +40,12 @@ func AddTodoItem(ctx context.Context, db *sql.DB, description string) error {
 	}
 	return nil
 }
+
+// DeleteTodoItem deletes a todo item from the todo_items table.
+func DeleteTodoItem(ctx context.Context, db *sql.DB, id int) error {
+	_, err := db.ExecContext(ctx, "DELETE FROM todo_items WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("failed to delete todo item: %w", err)
+	}
+	return nil
+}
