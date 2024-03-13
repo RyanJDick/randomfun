@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+{{ template "head.html" .Head }}
+
+<body>
+    <h1 class="text-3xl p-8">TODO</h1>
+    <div class="p-2">
+        {{ block "todo.list" .}}
+        <ol id="todo-list">
+            {{ range .TodoItems }}
+            <li class="p-1">
+                {{ .Description }}
+            </li>
+            {{ end }}
+        </ol>
+        {{ end }}
+        <form hx-post="/todo" hx-target="#todo-list" class="p-1">
+            <input type="text" name="description" class="border" />
+            <input type="submit" value="Add" />
+        </form>
+    </div>
+</body>
+
+</html>

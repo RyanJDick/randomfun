@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"path/filepath"
 	"sync"
 	"text/template"
 	"time"
@@ -41,9 +42,14 @@ func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 	migrater.Migrate(ctx)
 	logger.Info("DB migrations complete")
 
+	// Find all template files.
+	templateFilenames, err := filepath.Glob("templates/*.html")
+	if err != nil {
+		return fmt.Errorf("failed to list template files: %w", err)
+	}
+
 	// Prepare TemplateExecutor.
 	var tmpl utils.TemplateExecutor
-	templateFilenames := []string{"templates/index.html", "templates/hello.html", "templates/head.html"}
 	if cfg.Environment == utils.EEDevelopment {
 		tmpl = utils.NewDevTemplate(templateFilenames...)
 	} else {
@@ -64,6 +70,20 @@ func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 		middleware.WithLogging(
 			logger,
 			handlers.BuildGetHelloHandler(tmpl, logger, cfg, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
+		),
+	)
+	http.Handle(
+		"GET /todo",
+		middleware.WithLogging(
+			logger,
+			handlers.BuildGetTodoHandler(tmpl, logger, db, cfg, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
+		),
+	)
+	http.Handle(
+		"POST /todo",
+		middleware.WithLogging(
+			logger,
+			handlers.BuildPostTodoHandler(tmpl, logger, db, cfg, "/"+viteManifest.MainJSFile.File, "/"+viteManifest.MainCSSFile.File),
 		),
 	)
 	http.Handle(
