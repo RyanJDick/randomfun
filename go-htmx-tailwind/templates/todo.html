@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+{{ template "head.html" .Head }}
+
+<body>
+    <h1 class="text-3xl p-8">TODO</h1>
+    <div class="p-2 max-w-96">
+        {{ block "todo.list" .}}
+        <ol id="todo-list">
+            {{ range .TodoItems }}
+            <li class="p-1 flex">
+                <button hx-delete="/todo/{{ .Id }}" hx-target="#todo-list"
+                    class="border rounded-sm hover:bg-gray-300 px-2 mr-2">Delete</button>
+                <span class="">{{ .Description }}</span>
+            </li>
+            {{ end }}
+        </ol>
+        {{ end }}
+        <form hx-post="/todo" hx-target="#todo-list" class="p-1 pt-4 flex gap-x-2">
+            <input type="text" name="description" class="border flex-grow" />
+            <input type="submit" value="Add" class="border rounded-sm hover:bg-gray-300 hover:cursor-pointer px-2" />
+        </form>
+    </div>
+</body>
+
+</html>

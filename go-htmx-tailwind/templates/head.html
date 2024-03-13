@@ -1,0 +1,12 @@
+<head>
+    <title> {{ .Title }} </title>
+    <base href="/">
+    {{ if .IsDevelopment }}
+    <script type="module" src="http://localhost:5173/@vite/client"></script>
+    <script type="module" src="http://localhost:5173/src/main.ts"></script>
+    <link rel="stylesheet" href="http://localhost:5173/src/main.css">
+    {{ else }}
+    <script type="module" src="{{ .MainJSPath }}"></script>
+    <link rel="stylesheet" href="{{ .MainCSSPath }}">
+    {{ end }}
+</head>
