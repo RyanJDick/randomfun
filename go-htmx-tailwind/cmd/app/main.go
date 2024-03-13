@@ -94,13 +94,6 @@ func run(ctx context.Context, logger *slog.Logger, cfg *utils.AppConfig) error {
 		),
 	)
 	http.Handle(
-		"GET /time",
-		middleware.WithLogging(
-			logger,
-			handlers.BuildGetTimeHandler(tmpl),
-		),
-	)
-	http.Handle(
 		"GET /assets/",
 		middleware.WithLogging(
 			logger,

@@ -3,16 +3,10 @@
 {{ template "head.html" .Head }}
 
 <body>
-  <p>Hello to {{ .Name }}!</p>
-
-  {{ define "hello.time" }}
-  <div>
-    <p>The time: {{ .Time }}</p>
-    <button hx-get="/time" hx-target="closest div" hx-swap="outerHTML"
-      class="p-8 border-gray-800 border-2 bg-gray-300">Get Time</button>
+  <div class="p-4">
+    <h1 class="text-xl">Hello to {{ .Name }}!</h1>
+    <p>(Notice how your name is populated based on the route path)</p>
   </div>
-  {{ end }}
-  {{template "hello.time" .}}
 </body>
 
 </html>
