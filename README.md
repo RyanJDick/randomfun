@@ -9,3 +9,4 @@ Miscellaneous experiments, notebooks, small projects, etc.
 - [sd_prompt_embedding_manipulation](sd_prompt_embedding_manipulation/): Experiments around the manipulation of Stable Diffusion text prompt embeddings.
 - [strip_image_metadata](strip_image_metadata/): A super-simple script to anonymize a directory of images.
 - [unsplash_scraper](unsplash_scraper/): A tool for scraping free images from unsplash.
+- [karabiner_utils](karabiner_utils/): Utils for generating a Karabiner simlayer config.
