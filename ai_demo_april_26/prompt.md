@@ -1,0 +1,1 @@
+Build a Google Maps / yelp restaurant card based on the specs in SPEC.md. Add the implementation to prompt.md.
