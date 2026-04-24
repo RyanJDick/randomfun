@@ -1,0 +1,18 @@
+{
+  "agents": [
+    "codex",
+    "claude"
+  ],
+  "schema_version": 1,
+  "setup_source": "popcorn setup",
+  "skills": [
+    {
+      "name": "popcorn-submission-workflow",
+      "path": ".popcorn/skills/popcorn-submission-workflow"
+    },
+    {
+      "name": "load-inline-native-code",
+      "path": ".popcorn/skills/load-inline-native-code"
+    }
+  ]
+}
