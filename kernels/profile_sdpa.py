@@ -5,38 +5,51 @@ import modal
 GPU = "H100"
 
 image = modal.Image.debian_slim(python_version="3.12").pip_install(
-    "torch==2.5.1", "numpy"
+    "torch==2.5.1", "numpy", "matplotlib", "pandas"
 )
 
 app = modal.App("profile-sdpa", image=image)
 
 
-# (batch, num_heads, seq_len, head_dim)
-SHAPES = [
-    (2048, 1, 200, 64),
-    (2048, 1, 200, 256),
-    (2048, 1, 3000, 256),
-    (2048, 8, 3000, 32),
-]
-
-WARMUP_ITERS = 5
-TIMING_ITERS = 20
+# Fixed dims for the sweep; only sequence length varies.
+# TODO(ryand): Figure out why things fail with larger batch sizes.
+BATCH = 1024
+NUM_HEADS = 1
+HEAD_DIM = 256
+SEQ_LENS = [256 * i for i in range(1, 17)]  # 256 .. 4096
 
 
 with image.imports():
-    import numpy as np
     import torch
     import triton
     import triton.language as tl
 
     @triton.jit
     def _sdpa_fwd_kernel(
-        Q, K, V, Out, sm_scale,
-        stride_qb, stride_qh, stride_qm, stride_qd,
-        stride_kb, stride_kh, stride_kn, stride_kd,
-        stride_vb, stride_vh, stride_vn, stride_vd,
-        stride_ob, stride_oh, stride_om, stride_od,
-        N_CTX_Q, N_CTX_K, H,
+        Q,
+        K,
+        V,
+        Out,
+        sm_scale,
+        stride_qb,
+        stride_qh,
+        stride_qm,
+        stride_qd,
+        stride_kb,
+        stride_kh,
+        stride_kn,
+        stride_kd,
+        stride_vb,
+        stride_vh,
+        stride_vn,
+        stride_vd,
+        stride_ob,
+        stride_oh,
+        stride_om,
+        stride_od,
+        N_CTX_Q,
+        N_CTX_K,
+        H,
         BLOCK_M: tl.constexpr,
         BLOCK_N: tl.constexpr,
         BLOCK_D: tl.constexpr,
@@ -103,7 +116,7 @@ with image.imports():
         # q, k, v: (B, H, N, D), bf16/fp16. D must be a power of 2.
         B, H, N_Q, D = q.shape
         N_K = k.shape[2]
-        sm_scale = 1.0 / (D ** 0.5)
+        sm_scale = 1.0 / (D**0.5)
 
         out = torch.empty_like(q)
 
@@ -113,91 +126,97 @@ with image.imports():
         grid = (triton.cdiv(N_Q, BLOCK_M), B * H)
 
         _sdpa_fwd_kernel[grid](
-            q, k, v, out, sm_scale,
-            q.stride(0), q.stride(1), q.stride(2), q.stride(3),
-            k.stride(0), k.stride(1), k.stride(2), k.stride(3),
-            v.stride(0), v.stride(1), v.stride(2), v.stride(3),
-            out.stride(0), out.stride(1), out.stride(2), out.stride(3),
-            N_Q, N_K, H,
-            BLOCK_M=BLOCK_M, BLOCK_N=BLOCK_N, BLOCK_D=D,
+            q,
+            k,
+            v,
+            out,
+            sm_scale,
+            q.stride(0),
+            q.stride(1),
+            q.stride(2),
+            q.stride(3),
+            k.stride(0),
+            k.stride(1),
+            k.stride(2),
+            k.stride(3),
+            v.stride(0),
+            v.stride(1),
+            v.stride(2),
+            v.stride(3),
+            out.stride(0),
+            out.stride(1),
+            out.stride(2),
+            out.stride(3),
+            N_Q,
+            N_K,
+            H,
+            BLOCK_M=BLOCK_M,
+            BLOCK_N=BLOCK_N,
+            BLOCK_D=D,
         )
         return out
 
 
-def _bench(fn, warmup_iters: int, timing_iters: int) -> dict:
-    for _ in range(warmup_iters):
-        fn()
-    torch.cuda.synchronize()
-
-    starts = [torch.cuda.Event(enable_timing=True) for _ in range(timing_iters)]
-    ends = [torch.cuda.Event(enable_timing=True) for _ in range(timing_iters)]
-    for i in range(timing_iters):
-        starts[i].record()
-        fn()
-        ends[i].record()
-    torch.cuda.synchronize()
-
-    times_ms = np.array([s.elapsed_time(e) for s, e in zip(starts, ends)])
-    return {
-        "mean_ms": float(times_ms.mean()),
-        "std_ms": float(times_ms.std()),
-        "min_ms": float(times_ms.min()),
-        "max_ms": float(times_ms.max()),
-    }
-
-
 @app.function(gpu=GPU)
-def profile_shape(
-    batch: int,
-    num_heads: int,
-    seq_len: int,
-    head_dim: int,
-    warmup_iters: int = WARMUP_ITERS,
-    timing_iters: int = TIMING_ITERS,
-) -> dict:
-    device = torch.device("cuda")
-    dtype = torch.bfloat16  # flash-attn requires fp16/bf16
+def run_benchmark(
+    batch: int = BATCH,
+    num_heads: int = NUM_HEADS,
+    head_dim: int = HEAD_DIM,
+    seq_lens: list[int] = SEQ_LENS,
+) -> dict[str, bytes]:
+    import os
 
-    shape = (batch, num_heads, seq_len, head_dim)
-    q = torch.randn(shape, device=device, dtype=dtype)
-    k = torch.randn(shape, device=device, dtype=dtype)
-    v = torch.randn(shape, device=device, dtype=dtype)
+    @triton.testing.perf_report(
+        triton.testing.Benchmark(
+            x_names=["N"],
+            x_vals=list(seq_lens),
+            line_arg="provider",
+            line_vals=["torch", "triton"],
+            line_names=["Torch (FLASH_ATTENTION)", "Triton"],
+            styles=[("green", "-"), ("blue", "-")],
+            ylabel="ms",
+            plot_name="sdpa-vs-seqlen",
+            args={"B": batch, "H": num_heads, "D": head_dim},
+        )
+    )
+    def benchmark(B, H, N, D, provider):
+        q = torch.randn((B, H, N, D), device="cuda", dtype=torch.bfloat16)
+        k = torch.randn((B, H, N, D), device="cuda", dtype=torch.bfloat16)
+        v = torch.randn((B, H, N, D), device="cuda", dtype=torch.bfloat16)
+        quantiles = [0.5, 0.2, 0.8]
+        if provider == "torch":
+            with torch.nn.attention.sdpa_kernel(
+                torch.nn.attention.SDPBackend.FLASH_ATTENTION
+            ):
+                ms, min_ms, max_ms = triton.testing.do_bench(
+                    lambda: torch.nn.functional.scaled_dot_product_attention(q, k, v),
+                    quantiles=quantiles,
+                )
+        else:
+            ms, min_ms, max_ms = triton.testing.do_bench(
+                lambda: triton_sdpa(q, k, v), quantiles=quantiles
+            )
+        return ms, max_ms, min_ms
 
-    def torch_fn():
-        with torch.nn.attention.sdpa_kernel(torch.nn.attention.SDPBackend.FLASH_ATTENTION):
-            return torch.nn.functional.scaled_dot_product_attention(q, k, v)
+    save_path = "/tmp/sdpa_bench"
+    os.makedirs(save_path, exist_ok=True)
+    benchmark.run(show_plots=False, print_data=True, save_path=save_path)
 
-    def triton_fn():
-        return triton_sdpa(q, k, v)
-
-    o_torch = torch_fn()
-    o_triton = triton_fn()
-    max_abs_err = (o_torch.float() - o_triton.float()).abs().max().item()
-
-    return {
-        "shape": shape,
-        "torch": _bench(torch_fn, warmup_iters, timing_iters),
-        "triton": _bench(triton_fn, warmup_iters, timing_iters),
-        "max_abs_err": max_abs_err,
-    }
+    out: dict[str, bytes] = {}
+    for name in os.listdir(save_path):
+        with open(os.path.join(save_path, name), "rb") as f:
+            out[name] = f.read()
+    return out
 
 
 @app.local_entrypoint()
 def main():
-    header = (
-        f"{'shape':<28} {'torch (ms)':>18} {'triton (ms)':>18} "
-        f"{'speedup':>9} {'max err':>10}"
-    )
-    print(header)
-    print("-" * len(header))
-    for shape in SHAPES:
-        r = profile_shape.remote(*shape)
-        t_mean, t_std = r["torch"]["mean_ms"], r["torch"]["std_ms"]
-        tr_mean, tr_std = r["triton"]["mean_ms"], r["triton"]["std_ms"]
-        print(
-            f"{str(r['shape']):<28} "
-            f"{t_mean:>10.4f} ± {t_std:>5.2f}  "
-            f"{tr_mean:>10.4f} ± {tr_std:>5.2f}  "
-            f"{t_mean / tr_mean:>7.2f}x  "
-            f"{r['max_abs_err']:>10.4f}"
-        )
+    import pathlib
+
+    out_dir = pathlib.Path("bench_out")
+    out_dir.mkdir(exist_ok=True)
+    files = run_benchmark.remote()
+    for name, content in files.items():
+        path = out_dir / name
+        path.write_bytes(content)
+        print(f"wrote {path}")
