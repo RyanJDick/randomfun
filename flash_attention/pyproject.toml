@@ -1,0 +1,18 @@
+[project]
+name = "flash-attention-lab"
+version = "0.1.0"
+description = "Re-implementing flash-attention from scratch (Triton / CUDA), with benchmarks against torch SDPA."
+requires-python = ">=3.12"
+# These are the deps needed to run the benchmarks/tests directly on a CUDA box.
+# The Modal image in modal_run.py installs its own copy of these (keep in sync).
+dependencies = [
+    "torch>=2.7",
+    "matplotlib>=3.9",
+    "pandas>=2.2",
+]
+
+[dependency-groups]
+dev = [
+    "modal>=1.0",
+    "pytest>=8.0",
+]
