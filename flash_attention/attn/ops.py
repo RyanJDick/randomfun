@@ -4,8 +4,10 @@ Every implementation shares the same signature:
 
     fn(q, k, v, *, causal: bool = False) -> out
 
-where q, k, v are shaped (batch, heads, seq_len, head_dim) and out has the
-same shape as q. Softmax scaling is the standard 1/sqrt(head_dim).
+where q is shaped (batch, heads, q_seq_len, head_dim), k and v are shaped
+(batch, heads, kv_seq_len, head_dim), and out has the same shape as q.
+Softmax scaling is the standard 1/sqrt(head_dim). Causal masking follows
+torch's is_causal convention: the triangle is aligned to the top-left corner.
 
 The benchmark harness and the correctness tests iterate over this registry,
 so future from-scratch implementations (Triton, CUDA) only need to be
@@ -65,7 +67,8 @@ def reference_attention(q, k, v, *, causal: bool = False) -> torch.Tensor:
     q, k, v = (t.float() for t in (q, k, v))
     scores = q @ k.transpose(-2, -1) / q.shape[-1] ** 0.5
     if causal:
-        seq_len = q.shape[-2]
-        mask = torch.ones(seq_len, seq_len, dtype=torch.bool, device=q.device).tril()
+        q_len, kv_len = q.shape[-2], k.shape[-2]
+        # Rectangular tril == torch's top-left-aligned is_causal mask.
+        mask = torch.ones(q_len, kv_len, dtype=torch.bool, device=q.device).tril()
         scores = scores.masked_fill(~mask, float("-inf"))
     return (scores.softmax(dim=-1) @ v).to(out_dtype)

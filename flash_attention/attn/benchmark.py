@@ -25,21 +25,32 @@ from .ops import IMPLEMENTATIONS
 DTYPES = {"fp16": torch.float16, "bf16": torch.bfloat16}
 
 DEFAULT_PROVIDERS = ["torch-flash", "torch-cudnn", "torch-mem-eff"]
-DEFAULT_SEQ_LENS = [2**i for i in range(9, 15)]  # 512 .. 16384
+DEFAULT_KV_SEQ_LENS = [2**i for i in range(9, 15)]  # 512 .. 16384
 
 
 def attention_flops(
-    *, batch: int, heads: int, seq_len: int, head_dim: int, causal: bool, mode: str
+    *,
+    batch: int,
+    heads: int,
+    q_seq_len: int,
+    kv_seq_len: int,
+    head_dim: int,
+    causal: bool,
+    mode: str,
 ) -> float:
     """Matmul FLOPs for one attention call.
 
-    Forward: 2 matmuls (QK^T and PV), 2 FLOPs per MAC. Causal halves the work.
+    Forward: 2 matmuls (QK^T and PV), 2 FLOPs per MAC each, over the attended
+    (query, key) pairs. torch's is_causal aligns the triangle to the top-left
+    corner, which is what the causal pair count assumes.
     Backward: 5 matmuls, i.e. 2.5x the forward (standard flash-attention
     accounting; recomputation inside the kernel is not counted).
     """
-    flops = 4.0 * batch * heads * seq_len**2 * head_dim
     if causal:
-        flops *= 0.5
+        pairs = sum(min(i + 1, kv_seq_len) for i in range(q_seq_len))
+    else:
+        pairs = q_seq_len * kv_seq_len
+    flops = 4.0 * batch * heads * pairs * head_dim
     if mode == "bwd":
         flops *= 2.5
     return flops
@@ -49,16 +60,16 @@ def _make_configs(args: argparse.Namespace) -> list[triton.testing.Benchmark]:
     causal_vals = {"true": [True], "false": [False], "both": [False, True]}[args.causal]
     return [
         triton.testing.Benchmark(
-            x_names=["seq_len"],
-            x_vals=args.seq_lens,
+            x_names=["kv_seq_len"],
+            x_vals=args.kv_seq_lens,
             line_arg="provider",
             line_vals=args.providers,
             line_names=args.providers,
             x_log=True,
             ylabel="TFLOP/s",
             plot_name=(
-                f"attention-{mode}-causal_{causal}"
-                f"-b{args.batch}-h{args.heads}-d{args.head_dim}-{args.dtype}"
+                f"attention-{mode}-causal_{causal}-b{args.batch}-h{args.heads}"
+                f"-q{args.q_seq_len}-d{args.head_dim}-{args.dtype}"
             ),
             args={"mode": mode, "causal": causal},
         )
@@ -67,13 +78,16 @@ def _make_configs(args: argparse.Namespace) -> list[triton.testing.Benchmark]:
 
 
 def _make_bench_fn(args: argparse.Namespace):
-    def bench(seq_len: int, provider: str, mode: str, causal: bool) -> float:
+    def bench(kv_seq_len: int, provider: str, mode: str, causal: bool) -> float:
         dtype = DTYPES[args.dtype]
-        shape = (args.batch, args.heads, seq_len, args.head_dim)
-        q, k, v = (
-            torch.randn(shape, device="cuda", dtype=dtype, requires_grad=(mode == "bwd"))
-            for _ in range(3)
-        )
+
+        def rand(seq_len: int) -> torch.Tensor:
+            shape = (args.batch, args.heads, seq_len, args.head_dim)
+            return torch.randn(
+                shape, device="cuda", dtype=dtype, requires_grad=(mode == "bwd")
+            )
+
+        q, k, v = rand(args.q_seq_len), rand(kv_seq_len), rand(kv_seq_len)
         impl = IMPLEMENTATIONS[provider]
         try:
             if mode == "fwd":
@@ -85,12 +99,13 @@ def _make_bench_fn(args: argparse.Namespace):
             ms = triton.testing.do_bench(fn)
         except (RuntimeError, torch.cuda.OutOfMemoryError) as e:
             # Unsupported backend / OOM at this size: leave a gap in the plot.
-            print(f"[skip] {provider} {mode} seq_len={seq_len}: {e}")
+            print(f"[skip] {provider} {mode} kv_seq_len={kv_seq_len}: {e}")
             return float("nan")
         flops = attention_flops(
             batch=args.batch,
             heads=args.heads,
-            seq_len=seq_len,
+            q_seq_len=args.q_seq_len,
+            kv_seq_len=kv_seq_len,
             head_dim=args.head_dim,
             causal=causal,
             mode=mode,
@@ -110,11 +125,18 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="Attention implementations to benchmark.",
     )
     parser.add_argument("--modes", nargs="+", choices=["fwd", "bwd"], default=["fwd", "bwd"])
-    parser.add_argument("--causal", choices=["true", "false", "both"], default="both")
-    parser.add_argument("--batch", type=int, default=4)
-    parser.add_argument("--heads", type=int, default=16)
-    parser.add_argument("--head-dim", type=int, default=64)
-    parser.add_argument("--seq-lens", nargs="+", type=int, default=DEFAULT_SEQ_LENS)
+    parser.add_argument("--causal", choices=["true", "false", "both"], default="false")
+    parser.add_argument("--batch", type=int, default=4096)
+    parser.add_argument("--heads", type=int, default=1)
+    parser.add_argument("--head-dim", type=int, default=96)
+    parser.add_argument("--q-seq-len", type=int, default=32)
+    parser.add_argument(
+        "--kv-seq-lens",
+        nargs="+",
+        type=int,
+        default=DEFAULT_KV_SEQ_LENS,
+        help="k/v sequence lengths to sweep (the plot's x-axis).",
+    )
     parser.add_argument("--dtype", choices=sorted(DTYPES), default="bf16")
     parser.add_argument("--out-dir", default="bench_out", help="Where to save plots and CSVs.")
     return parser.parse_args(argv)
