@@ -58,6 +58,7 @@ def attention_flops(
 
 def _make_configs(args: argparse.Namespace) -> list[triton.testing.Benchmark]:
     causal_vals = {"true": [True], "false": [False], "both": [False, True]}[args.causal]
+    ylabels = {"tflops": "TFLOP/s", "mem": "peak memory (GB)"}
     return [
         triton.testing.Benchmark(
             x_names=["kv_seq_len"],
@@ -66,19 +67,19 @@ def _make_configs(args: argparse.Namespace) -> list[triton.testing.Benchmark]:
             line_vals=args.providers,
             line_names=args.providers,
             x_log=True,
-            ylabel="TFLOP/s",
+            ylabel=ylabels[metric],
             plot_name=(
-                f"attention-{mode}-causal_{causal}-b{args.batch}-h{args.heads}"
+                f"attention-{mode}-{metric}-causal_{causal}-b{args.batch}-h{args.heads}"
                 f"-q{args.q_seq_len}-d{args.head_dim}-{args.dtype}"
             ),
-            args={"mode": mode, "causal": causal},
+            args={"mode": mode, "causal": causal, "metric": metric},
         )
-        for mode, causal in itertools.product(args.modes, causal_vals)
+        for mode, causal, metric in itertools.product(args.modes, causal_vals, args.metrics)
     ]
 
 
 def _make_bench_fn(args: argparse.Namespace):
-    def bench(kv_seq_len: int, provider: str, mode: str, causal: bool) -> float:
+    def bench(kv_seq_len: int, provider: str, mode: str, causal: bool, metric: str) -> float:
         dtype = DTYPES[args.dtype]
 
         def rand(seq_len: int) -> torch.Tensor:
@@ -90,16 +91,26 @@ def _make_bench_fn(args: argparse.Namespace):
         q, k, v = rand(args.q_seq_len), rand(kv_seq_len), rand(kv_seq_len)
         impl = IMPLEMENTATIONS[provider]
         try:
+            # Reset before the forward pass so that for bwd mode the peak spans
+            # the whole fwd+bwd (saved activations included), not just the
+            # backward call.
+            if metric == "mem":
+                torch.cuda.synchronize()
+                torch.cuda.reset_peak_memory_stats()
             if mode == "fwd":
                 fn = lambda: impl(q, k, v, causal=causal)
             else:
                 out = impl(q, k, v, causal=causal)
                 grad = torch.randn_like(out)
                 fn = lambda: out.backward(grad, retain_graph=True)
+            if metric == "mem":
+                fn()
+                torch.cuda.synchronize()
+                return torch.cuda.max_memory_allocated() / 2**30
             ms = triton.testing.do_bench(fn)
         except (RuntimeError, torch.cuda.OutOfMemoryError) as e:
             # Unsupported backend / OOM at this size: leave a gap in the plot.
-            print(f"[skip] {provider} {mode} kv_seq_len={kv_seq_len}: {e}")
+            print(f"[skip] {provider} {mode} {metric} kv_seq_len={kv_seq_len}: {e}")
             return float("nan")
         flops = attention_flops(
             batch=args.batch,
@@ -125,6 +136,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="Attention implementations to benchmark.",
     )
     parser.add_argument("--modes", nargs="+", choices=["fwd", "bwd"], default=["fwd", "bwd"])
+    parser.add_argument(
+        "--metrics",
+        nargs="+",
+        choices=["tflops", "mem"],
+        default=["tflops", "mem"],
+        help="What to plot: throughput and/or peak GPU memory.",
+    )
     parser.add_argument("--causal", choices=["true", "false", "both"], default="false")
     parser.add_argument("--batch", type=int, default=4096)
     parser.add_argument("--heads", type=int, default=1)
