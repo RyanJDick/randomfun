@@ -60,8 +60,7 @@ def generate(
 
 def write_split(path: str, examples: list[str]) -> None:
     with open(path, "w") as f:
-        for example in examples:
-            f.write(example + "\n")
+        f.writelines(example + "\n" for example in examples)
 
 
 def main() -> None:
@@ -87,8 +86,10 @@ def main() -> None:
     print(f"vocab ({len(VOCAB)} tokens): {' '.join(VOCAB)}")
     print(f"wrote {len(train):,} train examples -> {args.train_out}")
     print(f"wrote {len(test):,} test examples  -> {args.test_out}")
-    print(f"train/test overlap: {overlap:,} examples "
-          f"({overlap / len(test):.1%} of test; expected on short sequences)")
+    print(
+        f"train/test overlap: {overlap:,} examples "
+        f"({overlap / len(test):.1%} of test; expected on short sequences)"
+    )
 
 
 if __name__ == "__main__":

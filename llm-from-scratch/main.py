@@ -18,7 +18,9 @@ from data import IGNORE_INDEX, CopyReverseDataset, make_collate_fn
 from tokenizer import Tokenizer
 
 
-def roundtrip_check(tokenizer: Tokenizer, dataset: CopyReverseDataset, n: int = 5) -> None:
+def roundtrip_check(
+    tokenizer: Tokenizer, dataset: CopyReverseDataset, n: int = 5
+) -> None:
     """Assert decode(encode(line)) == line for the first n examples."""
     for line in dataset.lines[:n]:
         decoded = tokenizer.decode(tokenizer.encode(line))
@@ -50,8 +52,11 @@ def main() -> None:
     parser.add_argument("--test", default="test.txt")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--epochs", type=int, default=1)
-    parser.add_argument("--mask-prompt", action="store_true",
-                        help="compute loss only on the answer (after '=')")
+    parser.add_argument(
+        "--mask-prompt",
+        action="store_true",
+        help="compute loss only on the answer (after '=')",
+    )
     args = parser.parse_args()
 
     tokenizer = Tokenizer()
@@ -67,12 +72,16 @@ def main() -> None:
         eq_id=tokenizer.stoi["="],
         mask_prompt=args.mask_prompt,
     )
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size,
-                              shuffle=True, collate_fn=collate_fn)
-    test_loader = DataLoader(test_ds, batch_size=args.batch_size,
-                             shuffle=False, collate_fn=collate_fn)
-    print(f"batches/epoch: train {len(train_loader):,} | test {len(test_loader):,} "
-          f"(batch_size={args.batch_size}, mask_prompt={args.mask_prompt})")
+    train_loader = DataLoader(
+        train_ds, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn
+    )
+    test_loader = DataLoader(
+        test_ds, batch_size=args.batch_size, shuffle=False, collate_fn=collate_fn
+    )
+    print(
+        f"batches/epoch: train {len(train_loader):,} | test {len(test_loader):,} "
+        f"(batch_size={args.batch_size}, mask_prompt={args.mask_prompt})"
+    )
 
     print("\n--- first train batch ---")
     show_batch(tokenizer, next(iter(train_loader)))
@@ -85,8 +94,10 @@ def main() -> None:
             n_tokens += int(batch["attention_mask"].sum())
             # TODO: model forward + loss + backward + optimizer step
         dt = time.time() - t0
-        print(f"epoch {epoch}: iterated {len(train_loader):,} batches, "
-              f"{n_tokens:,} real tokens in {dt:.2f}s")
+        print(
+            f"epoch {epoch}: iterated {len(train_loader):,} batches, "
+            f"{n_tokens:,} real tokens in {dt:.2f}s"
+        )
 
 
 if __name__ == "__main__":

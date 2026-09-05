@@ -46,9 +46,5 @@ class Tokenizer:
     def decode(self, ids: list[int], strip_special: bool = True) -> str:
         """Turn token ids back into a line, optionally dropping PAD/EOS."""
         special = {self.pad_id, self.eos_id}
-        toks = [
-            self.itos[i]
-            for i in ids
-            if not (strip_special and i in special)
-        ]
+        toks = [self.itos[i] for i in ids if not (strip_special and i in special)]
         return " ".join(toks)

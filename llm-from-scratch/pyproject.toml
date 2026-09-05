@@ -7,3 +7,13 @@ requires-python = ">=3.14"
 dependencies = [
     "torch>=2.14.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.6",
+]
+
+[tool.ruff.lint]
+# Enable import sorting (I) so `ruff check --fix` matches the editor's
+# organize-imports-on-save. E/F are on by default.
+extend-select = ["I"]
